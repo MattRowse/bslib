@@ -11,19 +11,19 @@ r$run(port=8000, host="0.0.0.0")
 #docker run -ti rocker/r-ver:3.5.0 
 
 #build image and call it secure_docker
-#docker build --no-cache -t secure_docker .
+#docker build --no-cache -t bslib .
 
 #run on port 80
-#docker run --rm -p 80:80 -p 443:443 secure_docker
+#docker run --rm -p 80:80 -p 443:443 bslib
 
 #view the api is working at this link
 #http://127.0.0.1/predict_petal_length?petal_width=1
 
 #tag the image name and dockerhub address
-#docker tag secure_docker mattwanz/secure_docker
+#docker tag bslib mattwanz/bslib
 
 # push the image to dockerhub
-#docker push mattwanz/secure_docker
+#docker push mattwanz/bslib
 
 # droplet instructions ssh in
 # sudo apt update
@@ -38,10 +38,10 @@ r$run(port=8000, host="0.0.0.0")
 # sudo systemctl status docker
 
 # api_output <- POST("http://167.172.118.197:8000/response?text=purchase%20order%20import",verbose())# pull in the image from dockerhub
-# docker pull mattwanz/secure_docker
+# docker pull mattwanz/bslib
 
 # run the service
-# docker run --rm -p 80:80 -p 443:443 mattwanz/secure_docker
+# docker run --rm -p 80:80 -p 443:443 mattwanz/bslib
 
 # clean out old docker containers
 # docker kill $(docker ps -q)

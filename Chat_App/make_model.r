@@ -1,6 +1,6 @@
 library(dplyr)
 library(lubridate)
-library(SnowballC)
+#library(SnowballC)
 library(httr)
 library(tm)
 library(gsheet)
