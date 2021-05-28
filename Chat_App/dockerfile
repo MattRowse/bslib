@@ -35,16 +35,16 @@ RUN R -e "install.packages('urltools')"
 RUN R -e "install.packages('openssl')"
 RUN R -e "install.packages('shiny')"
 RUN R -e "install.packages('Rtools')"
+RUN R -e "install.packages('httr')"
 RUN R -e "install.packages('sass')"
 RUN R -e "install.packages('bslib',dependencies=TRUE)"
 RUN R -e "install.packages('thematic',dependencies=TRUE)"
 RUN R -e "install.packages('shinydashboard')"
 RUN R -e "install.packages('lubridate')"
+RUN R -e "install.packages('dplyr')"
 
 COPY / /
 
 EXPOSE 80 443
 
-WORKDIR /Chat_App
-
-CMD "R" "-e" "shiny::runApp('app.R', host='0.0.0.0')"
+CMD "R" "-e" "shiny::runApp('app.R', options = list(port = '3838'))"

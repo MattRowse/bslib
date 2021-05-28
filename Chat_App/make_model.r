@@ -1,10 +1,12 @@
 library(dplyr)
 library(lubridate)
-#library(SnowballC)
+library(SnowballC)
 library(httr)
 library(tm)
 library(gsheet)
 library(e1071)
+library(mongolite)
+
 # Chatbot for guiding customers to required documentation
 
 # Methdology
@@ -15,11 +17,11 @@ library(e1071)
 # 5. Convert the testing question into document term matrix (sparse matrix with 1s and 0s)
 # 6. Merge the testing DTM with training DTM, with testing DTM 1s for all terms and training DTM 0s for all terms
 # 7. Predict the answer with the trained SVM model
-
 # read data
+sheet <- "https://docs.google.com/spreadsheets/d/1lq3tOwDrxD9ZEuKc_oYCI-2lb9octmcgbN2P274D6wk/edit#gid=0"
 #data = gsheet2tbl("https://docs.google.com/spreadsheets/d/1lq3tOwDrxD9ZEuKc_oYCI-2lb9octmcgbN2P274D6wk/edit#gid=0")
 #saveRDS(data, file = "data")
-data = readRDS("data")
+data = readRDS(file = "data.RDS")
 data1 <- data %>% filter(Area=="design")
 # 1. Convert training questions into document term matrix (sparse matrix with 1s and 0s)
 #clean the text
