@@ -1,22 +1,23 @@
 ## app.R ##
+setwd(getwd())
 library(shiny)
 library(shinydashboard)
-library(bslib)
-library(thematic)
+#library(bslib)
+#library(thematic)
 source("make_model.r")
 
 ## create a base theme for bslib
-theme <- bs_theme(bootswatch = "minty")
+#theme <- bs_theme(bootswatch = "minty")
 
 # Let thematic know to use the font from bs_lib
-thematic_shiny(font = "auto")
+#thematic_shiny(font = "auto")
 
 ui <- shinyUI(navbarPage(
   "Support Chatbot",
   tabPanel(
     "Ask a question",
     fluidPage(
-      theme = theme,
+#     theme = theme,
       div(
         selectInput(
           "category_field",

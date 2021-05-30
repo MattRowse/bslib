@@ -1,8 +1,3 @@
-setwd(getwd())
-library(plumber)
-r <- plumb("rest_controller.R")
-r$run(port=8000, host="0.0.0.0")
-
 #below are terminal commands
 #pull in base image
 #docker pull rocker/r-ver:3.5.0
@@ -41,6 +36,7 @@ r$run(port=8000, host="0.0.0.0")
 # docker pull mattwanz/bslib
 
 # run the service
+# docker run --rm -p 3838:3838 -p 80:80 -p 443:443 mattwanz/bslib
 # docker run --rm -p 80:80 -p 443:443 mattwanz/bslib
 
 # clean out old docker containers

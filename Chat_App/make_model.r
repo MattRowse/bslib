@@ -5,7 +5,6 @@ library(httr)
 library(tm)
 library(gsheet)
 library(e1071)
-library(mongolite)
 
 # Chatbot for guiding customers to required documentation
 
