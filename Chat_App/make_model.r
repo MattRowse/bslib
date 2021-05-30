@@ -21,6 +21,7 @@ sheet <- "https://docs.google.com/spreadsheets/d/1lq3tOwDrxD9ZEuKc_oYCI-2lb9octm
 #data = gsheet2tbl("https://docs.google.com/spreadsheets/d/1lq3tOwDrxD9ZEuKc_oYCI-2lb9octmcgbN2P274D6wk/edit#gid=0")
 #saveRDS(data, file = "data")
 data = readRDS(file = "data.RDS")
+logs = readRDS(file = "logs.RDS")
 data1 <- data %>% filter(Area=="design")
 # 1. Convert training questions into document term matrix (sparse matrix with 1s and 0s)
 #clean the text

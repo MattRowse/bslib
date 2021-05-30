@@ -63,4 +63,5 @@ COPY / /
 
 EXPOSE 80 443
 
-CMD service nginx start && ["R", "-e", "shiny::runApp('app.R', host='0.0.0.0', port=3838)"]
+#CMD service nginx start && "R", "-e", "shiny::runApp('app.R', host='0.0.0.0', port=3838)"
+CMD service nginx start && R -e "shiny::runApp('app.R',host='0.0.0.0', port=3838)"

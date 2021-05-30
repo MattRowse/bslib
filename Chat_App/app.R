@@ -17,7 +17,7 @@ ui <- shinyUI(navbarPage(
   tabPanel(
     "Ask a question",
     fluidPage(
-#     theme = theme,
+      #     theme = theme,
       div(
         selectInput(
           "category_field",
@@ -83,7 +83,6 @@ ui <- shinyUI(navbarPage(
 
 
 server <- shinyServer(function(input, output, session) {
-  session$onSessionEnded(stopApp)
   observeEvent(input$send, {
     output$chatbox <- renderText({
       if (input$category_field == "amazon") {
@@ -125,9 +124,19 @@ server <- shinyServer(function(input, output, session) {
       "Thank you for contributing!"
     })
     observeEvent(input$question_update, {
-    data <- data %>%
-      add_row(Area=as.character(input$update_category_field), Question=as.character(input$db_question_field), Answers=as.character(input$Q_answer_field),Timestamp=as.character(Sys.time()))
-    saveRDS(data, file = "data.RDS")})
+      data <- data %>%
+        add_row(
+          Area = as.character(input$update_category_field),
+          Question = as.character(input$db_question_field),
+          Answers = as.character(input$Q_answer_field),
+          Timestamp = as.character(Sys.time())
+        )
+      saveRDS(data, file = "data.RDS")
+    })
+#      observeEvent(input$question_update, {
+#        logs <- logs %>%
+#           add_row(user=session$user, area=as.character(input$update_category_field),question_update=as.character(input$db_question_field), answer_update=as.character(input$Q_answer_field),timestamp=Sys.time())
+#       saveRDS(logs, file = "logs.RDS")})
   })
 })
 shinyApp(ui, server)
