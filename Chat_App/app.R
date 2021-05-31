@@ -2,6 +2,8 @@
 setwd(getwd())
 library(shiny)
 library(shinydashboard)
+library(ggplot2)
+library(DataEditR)
 #library(bslib)
 #library(thematic)
 source("make_model.r")
@@ -83,6 +85,19 @@ ui <- shinyUI(navbarPage(
     br(),
     verbatimTextOutput("confirm_chatbox",
                        placeholder = TRUE)
+  ),
+  tabPanel(
+    "View logs",
+    selectInput(
+      "time_selection",
+      "Time Period",
+      choices = c("Today", "This Week", "This Month", "This Year"),
+      selected = "Make a selection",
+      width = "300px"
+    ),
+    br(),
+    # Show a plot of the generated distribution
+    plotOutput("myplot")
   )
 ))
 
@@ -105,6 +120,9 @@ server <- shinyServer(function(input, output, session) {
       if (input$category_field == "ebay") {
         out <- ebaypred(toString(input$question_field))
       }
+      if (input$category_field == "google") {
+        out <- xeropred(toString(input$question_field))
+      }
       if (input$category_field == "inventory") {
         out <- inventorypred(toString(input$question_field))
       }
@@ -116,6 +134,9 @@ server <- shinyServer(function(input, output, session) {
       }
       if (input$category_field == "payments") {
         out <- paymentspred(toString(input$question_field))
+      }
+      if (input$category_field == "webstore") {
+        out <- xeropred(toString(input$question_field))
       }
       if (input$category_field == "xero") {
         out <- xeropred(toString(input$question_field))
@@ -138,10 +159,27 @@ server <- shinyServer(function(input, output, session) {
         )
       saveRDS(data, file = "data.RDS")
     })
-#      observeEvent(input$question_update, {
-#        logs <- logs %>%
-#           add_row(user=session$user, area=as.character(input$update_category_field),question_update=as.character(input$db_question_field), answer_update=as.character(input$Q_answer_field),timestamp=Sys.time())
-#       saveRDS(logs, file = "logs.RDS")})
+    observeEvent(input$question_update, {
+      logs <- logs %>%
+        add_row(
+          area = as.character(input$update_category_field),
+          question_update = as.character(input$db_question_field),
+          answer_update = as.character(input$Q_answer_field),
+          timestamp = Sys.time()
+        )
+      saveRDS(logs, file = "logs.RDS")
+      logs = readRDS("logs.RDS")
+    })
+
   })
+  output$myplot <- renderPlot(
+    logs %>% group_by(area,question) %>% count(question) %>% ggplot(aes(area, n, fill = area)) +
+      geom_col()+
+      theme_minimal()+
+      ggtitle("Questions")+
+      labs(x="Topic",y="Volume")+
+      theme_light()+
+      theme(legend.position = "none")
+  )
 })
 shinyApp(ui, server)
