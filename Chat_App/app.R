@@ -37,6 +37,7 @@ ui <- shinyUI(navbarPage(
           height = "100px"
         )
       ),
+      br(),
       div(style = "display:inline-block",
           actionButton("send", "Find your answer")),
       br(),
@@ -55,6 +56,7 @@ ui <- shinyUI(navbarPage(
         width = "300px"
       )
     ),
+    br(),
     uiOutput("chatbox_t"),
     div(
       style = "display:inline-block",
@@ -65,6 +67,7 @@ ui <- shinyUI(navbarPage(
         height = "100px"
       )
     ),
+    br(),
     div(
       style = "display:inline-block",
       textAreaInput(
@@ -74,8 +77,10 @@ ui <- shinyUI(navbarPage(
         height = "100px"
       )
     ),
+    br(),
     div(style = "display:inline-block",
         actionButton("question_update", "Update database")),
+    br(),
     verbatimTextOutput("confirm_chatbox",
                        placeholder = TRUE)
   )
