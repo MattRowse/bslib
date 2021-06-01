@@ -35,7 +35,7 @@
 # api_output <- POST("http://167.172.118.197:8000/response?text=purchase%20order%20import",verbose())# pull in the image from dockerhub
 # docker pull mattwanz/bslib
 
-# run the service
+# run the service in detached mode (-d) means you can exec into container
 # docker run -d --rm -p 3838:3838 -p 80:80 -p 443:443 mattwanz/bslib
 # docker run -d --rm -p 80:80 -p 443:443 mattwanz/bslib
 

@@ -55,7 +55,7 @@ ui <- shinyUI(navbarPage(
         choices = unique(sort(data$Area)),
         selected = "Make a selection",
         width = "300px"
-      )
+      ),
     ),
     br(),
     uiOutput("chatbox_t"),
@@ -110,7 +110,12 @@ ui <- shinyUI(navbarPage(
     dataTableOutput("question_table"),
     div(
     downloadButton("download_log_Data", "Download Logs"),
-    downloadButton("download_question_Data", "Download Questions")
+    downloadButton("download_question_Data", "Download Questions"),
+    actionButton("train_models", "Retrain Question Models",
+                 icon("paper-plane"),
+                 style="color: #fff; background-color: #337ab7; border-color: #2e6da4"),
+              
+    helpText("When you click the retrain models button above, the application could stall, while the server is processing")
     )
   )
   )
@@ -184,7 +189,7 @@ server <- shinyServer(function(input, output, session) {
           Area = as.character(input$update_category_field),
           Question = as.character(input$db_question_field),
           Answers = as.character(input$Q_answer_field),
-          Timestamp = as.character(Sys.time())
+          Timestamp = ymd_hms(Sys.time())
         )
       saveRDS(data, file = "data.RDS")
     })
@@ -194,7 +199,7 @@ server <- shinyServer(function(input, output, session) {
           area = as.character(input$update_category_field),
           question_update = as.character(input$db_question_field),
           answer_update = as.character(input$Q_answer_field),
-          timestamp = Sys.time()
+          timestamp = ymd_hms(Sys.time())
         )
       saveRDS(logs, file = "logs.RDS")
       logs = readRDS("logs.RDS")
@@ -264,5 +269,10 @@ server <- shinyServer(function(input, output, session) {
       write.csv(data, file)
     }
   )
+  
+  observeEvent(input$train_models, {
+   train <- source("make_model.r")
+   train
+  })
 })
 shinyApp(ui, server)

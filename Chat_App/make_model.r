@@ -22,6 +22,7 @@ library(e1071)
 #saveRDS(data, file = "data.RDS")
 data = readRDS(file = "data.RDS")
 logs = readRDS(file = "logs.RDS")
+logs$timestamp <- ymd_hms(logs$timestamp)
 data1 <- data %>% filter(Area=="design")
 # 1. Convert training questions into document term matrix (sparse matrix with 1s and 0s)
 #clean the text

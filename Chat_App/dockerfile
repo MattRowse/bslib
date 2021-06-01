@@ -53,10 +53,11 @@ RUN R -e "install.packages('httr')"
 RUN R -e "install.packages('shinydashboard')"
 RUN R -e "install.packages('lubridate')"
 RUN R -e "install.packages('dplyr')"
-#RUN R -e "install.packages('sass')"
-#RUN R -e "install.packages('bslib')"
-#RUN R -e "install.packages('thematic')"
+RUN R -e "install.packages('sass')"
+RUN R -e "install.packages('bslib')"
+RUN R -e "install.packages('thematic')"
 RUN R -e "install.packages('ggplot2')"
+RUN R -e "install.packages('tidyr')"
         
 ADD ./nginx.conf /etc/nginx/nginx.conf
 
