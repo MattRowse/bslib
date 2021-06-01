@@ -3,7 +3,6 @@ setwd(getwd())
 library(shiny)
 library(shinydashboard)
 library(ggplot2)
-library(DataEditR)
 #library(bslib)
 #library(thematic)
 source("make_model.r")
@@ -19,7 +18,7 @@ ui <- shinyUI(navbarPage(
   tabPanel(
     "Ask a question",
     fluidPage(
-      #     theme = theme,
+ #    theme = theme,
       div(
         selectInput(
           "category_field",
@@ -88,18 +87,34 @@ ui <- shinyUI(navbarPage(
   ),
   tabPanel(
     "View logs",
-    selectInput(
+    dateRangeInput(
       "time_selection",
       "Time Period",
-      choices = c("Today", "This Week", "This Month", "This Year"),
-      selected = "Make a selection",
-      width = "300px"
+      start = "2021-06-01",
+      end = "2021-06-01",
+      min = NULL,
+      max = NULL,
+      format = "yyyy-mm-dd",
+      startview = "month",
+      weekstart = 1,
+      language = "en",
+      separator = " to ",
+      width = NULL,
+      autoclose = TRUE
     ),
     br(),
     # Show a plot of the generated distribution
-    plotOutput("myplot")
+    plotOutput("myusage"),
+    plotOutput("myplot"),
+    plotOutput("line_chart"),
+    dataTableOutput("question_table"),
+    div(
+    downloadButton("download_log_Data", "Download Logs"),
+    downloadButton("download_question_Data", "Download Questions")
+    )
   )
-))
+  )
+)
 
 
 server <- shinyServer(function(input, output, session) {
@@ -132,8 +147,14 @@ server <- shinyServer(function(input, output, session) {
       if (input$category_field == "myob") {
         out <- myobpred(toString(input$question_field))
       }
+      if (input$category_field == "mydeal") {
+        out <- mydealpred(toString(input$question_field))
+      }
       if (input$category_field == "payments") {
         out <- paymentspred(toString(input$question_field))
+      }
+      if (input$category_field == "shipping") {
+        out <- shippingpred(toString(input$question_field))
       }
       if (input$category_field == "webstore") {
         out <- xeropred(toString(input$question_field))
@@ -141,8 +162,16 @@ server <- shinyServer(function(input, output, session) {
       if (input$category_field == "xero") {
         out <- xeropred(toString(input$question_field))
       }
+      logs <- logs %>%
+        add_row(
+          area = as.character(input$category_field),
+          question = as.character(input$question_field),
+          answer = as.character(out),
+          timestamp = Sys.time()
+        )
+      saveRDS(logs, file = "logs.RDS")
+      logs = readRDS("logs.RDS")
       out
-      
     })
   })
   observeEvent(input$question_update, {
@@ -172,14 +201,68 @@ server <- shinyServer(function(input, output, session) {
     })
 
   })
+  observeEvent(input$time_selection, {
   output$myplot <- renderPlot(
-    logs %>% group_by(area,question) %>% count(question) %>% ggplot(aes(area, n, fill = area)) +
+    logs %>% 
+      filter(timestamp >=input$time_selection[1] & timestamp <= input$time_selection[2]) %>% 
+      group_by(area,question_update) %>% count(question_update) %>% ggplot(aes(area, n, fill = area)) +
       geom_col()+
       theme_minimal()+
-      ggtitle("Questions")+
+      ggtitle("Questions Updated")+
       labs(x="Topic",y="Volume")+
       theme_light()+
-      theme(legend.position = "none")
+      theme(legend.position = "none")+
+      coord_flip()
+  )
+  })
+  observeEvent(input$time_selection, {
+    output$myusage <- renderPlot(
+      logs %>% 
+        filter(timestamp >=input$time_selection[1] & timestamp <= input$time_selection[2] & question !=is.na(question)) %>% 
+        group_by(area,question) %>% count(question) %>% ggplot(aes(area, n, fill = area)) +
+        geom_col()+
+        theme_minimal()+
+        ggtitle("Queries Asked")+
+        labs(x="Topic",y="Volume")+
+        theme_light()+
+        theme(legend.position = "none")+
+        coord_flip()
+    )
+  })
+  observeEvent(input$time_selection, {
+    output$line_chart <- renderPlot(
+      logs %>% 
+        filter(timestamp >=input$time_selection[1] & timestamp <= input$time_selection[2]) %>% 
+        mutate(Date_Time = floor_date(timestamp,unit = "days")) %>% 
+        group_by(Date_Time) %>% count(question) %>% ggplot(aes(Date_Time,n)) +
+        geom_line()+
+        theme_minimal()+
+        ggtitle("Questions Asked")+
+        labs(x="Date",y="Volume")+
+        theme_light()+
+        theme(legend.position = "none")
+    )
+  })
+  observeEvent(input$time_selection, {
+    output$question_table <- renderDataTable(logs %>% select(question,answer,timestamp) %>% drop_na())
+  })
+  
+  output$download_log_Data <- downloadHandler(
+    filename = function() {
+      paste("logsdata-", Sys.Date(), ".csv", sep="")
+    },
+    content = function(file) {
+      write.csv(logs, file)
+    }
+  )
+  
+  output$download_question_Data <- downloadHandler(
+    filename = function() {
+      paste("questions-", Sys.Date(), ".csv", sep="")
+    },
+    content = function(file) {
+      write.csv(data, file)
+    }
   )
 })
 shinyApp(ui, server)

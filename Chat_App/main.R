@@ -1,15 +1,15 @@
 #below are terminal commands
 #pull in base image
-#docker pull rocker/r-ver:3.5.0
+#docker pull rocker/r-ver:4.0.0
 
 #run base image
-#docker run -ti rocker/r-ver:3.5.0 
+#docker run -ti rocker/r-ver:4.0.0
 
 #build image and call it secure_docker
 #docker build --no-cache -t bslib .
 
 #run on port 80
-#docker run --rm -p 80:80 -p 443:443 bslib
+#docker run -d --rm -p 80:80 -p 443:443 bslib_solar
 
 #view the api is working at this link
 #http://127.0.0.1/predict_petal_length?petal_width=1
@@ -36,8 +36,8 @@
 # docker pull mattwanz/bslib
 
 # run the service
-# docker run --rm -p 3838:3838 -p 80:80 -p 443:443 mattwanz/bslib
-# docker run --rm -p 80:80 -p 443:443 mattwanz/bslib
+# docker run -d --rm -p 3838:3838 -p 80:80 -p 443:443 mattwanz/bslib
+# docker run -d --rm -p 80:80 -p 443:443 mattwanz/bslib
 
 # clean out old docker containers
 # docker kill $(docker ps -q)

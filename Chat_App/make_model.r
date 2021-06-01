@@ -17,9 +17,9 @@ library(e1071)
 # 6. Merge the testing DTM with training DTM, with testing DTM 1s for all terms and training DTM 0s for all terms
 # 7. Predict the answer with the trained SVM model
 # read data
-sheet <- "https://docs.google.com/spreadsheets/d/1lq3tOwDrxD9ZEuKc_oYCI-2lb9octmcgbN2P274D6wk/edit#gid=0"
+#sheet <- "https://docs.google.com/spreadsheets/d/1lq3tOwDrxD9ZEuKc_oYCI-2lb9octmcgbN2P274D6wk/edit#gid=0"
 #data = gsheet2tbl("https://docs.google.com/spreadsheets/d/1lq3tOwDrxD9ZEuKc_oYCI-2lb9octmcgbN2P274D6wk/edit#gid=0")
-#saveRDS(data, file = "data")
+#saveRDS(data, file = "data.RDS")
 data = readRDS(file = "data.RDS")
 logs = readRDS(file = "logs.RDS")
 data1 <- data %>% filter(Area=="design")
@@ -530,6 +530,61 @@ myobpred = function(x){
   myob_answer = as.character(myob_p)
   paste(myob_answer)
 }
+pos <- data %>% filter(Area=="pos")
+# 1. Convert training questions into document term matrix (sparse matrix with 1s and 0s)
+#clean the text
+pos_corpus = VCorpus(VectorSource(pos$Question))
+pos_corpus = tm_map(pos_corpus, content_transformer(tolower))
+pos_corpus = tm_map(pos_corpus, removeNumbers)
+pos_corpus = tm_map(pos_corpus, removePunctuation)
+
+# corpus = tm_map(corpus, removeWords, stopwords())
+pos_corpus = tm_map(pos_corpus, stemDocument)
+pos_corpus = tm_map(pos_corpus, stripWhitespace)
+
+# convert to DTM
+pos_dtm = DocumentTermMatrix(pos_corpus)
+
+# convert to dataframe
+pos_dataset = as.data.frame(as.matrix(pos_dtm))
+
+# 2. Match the matrix of each training question with its corresponding answer to form a training matrix
+pos_data_train = cbind(pos['Answers'], pos_dataset)
+
+# 3. Train SVM model with the training matrix, specify type
+
+pos_svmfit = svm(Answers ~., pos_data_train, kernel = "linear",  type = "C", cost = 100, scale = FALSE)
+
+# 4. Propose a testing quesiton and build the prediction function
+pospred = function(x){
+  
+  # 5. Convert the testing question into document term matrix (sparse matrix with 1s and 0s)
+  #clean the text
+  pos_corpus = VCorpus(VectorSource(x))
+  pos_corpus = tm_map(pos_corpus, content_transformer(tolower))
+  pos_corpus = tm_map(pos_corpus, removeNumbers)
+  pos_corpus = tm_map(pos_corpus, removePunctuation)
+  
+  # corpus = tm_map(corpus, removeWords, stopwords())
+  pos_corpus = tm_map(pos_corpus, stemDocument)
+  pos_corpus = tm_map(pos_corpus, stripWhitespace)
+  
+  # convert to DTM
+  pos_dtm = DocumentTermMatrix(pos_corpus)
+  
+  # convert to dataframe
+  pos_data_test = as.data.frame(as.matrix(pos_dtm))
+  
+  # 6. Merge the testing DTM with training DTM, with testing DTM 1s for all terms and training DTM 0s for all terms
+  pos_add_data = pos_dataset[1,]
+  pos_add_data[pos_add_data == 1] = 0
+  pos_data_test=cbind(pos_data_test,pos_add_data)
+  
+  # 7. Predict the answer with the trained SVM model
+  pos_p = predict(pos_svmfit, pos_data_test)
+  pos_answer = as.character(pos_p)
+  paste(pos_answer)
+}
 
 xero <- data %>% filter(Area=="xero")
 # 1. Convert training questions into document term matrix (sparse matrix with 1s and 0s)
@@ -585,4 +640,120 @@ xeropred = function(x){
   xero_p = predict(xero_svmfit, xero_data_test)
   xero_answer = as.character(xero_p)
   paste(xero_answer)
+}
+shipping <- data %>% filter(Area=="shipping")
+# 1. Convert training questions into document term matrix (sparse matrix with 1s and 0s)
+#clean the text
+shipping_corpus = VCorpus(VectorSource(shipping$Question))
+shipping_corpus = tm_map(shipping_corpus, content_transformer(tolower))
+shipping_corpus = tm_map(shipping_corpus, removeNumbers)
+shipping_corpus = tm_map(shipping_corpus, removePunctuation)
+
+# corpus = tm_map(corpus, removeWords, stopwords())
+shipping_corpus = tm_map(shipping_corpus, stemDocument)
+shipping_corpus = tm_map(shipping_corpus, stripWhitespace)
+
+# convert to DTM
+shipping_dtm = DocumentTermMatrix(shipping_corpus)
+
+# convert to dataframe
+shipping_dataset = as.data.frame(as.matrix(shipping_dtm))
+
+# 2. Match the matrix of each training question with its corresponding answer to form a training matrix
+shipping_data_train = cbind(shipping['Answers'], shipping_dataset)
+
+# 3. Train SVM model with the training matrix, specify type
+
+shipping_svmfit = svm(Answers ~., shipping_data_train, kernel = "linear",  type = "C", cost = 100, scale = FALSE)
+
+# 4. Propose a testing quesiton and build the prediction function
+shippingpred = function(x){
+  
+  # 5. Convert the testing question into document term matrix (sparse matrix with 1s and 0s)
+  #clean the text
+  shipping_corpus = VCorpus(VectorSource(x))
+  shipping_corpus = tm_map(shipping_corpus, content_transformer(tolower))
+  shipping_corpus = tm_map(shipping_corpus, removeNumbers)
+  shipping_corpus = tm_map(shipping_corpus, removePunctuation)
+  
+  # corpus = tm_map(corpus, removeWords, stopwords())
+  shipping_corpus = tm_map(shipping_corpus, stemDocument)
+  shipping_corpus = tm_map(shipping_corpus, stripWhitespace)
+  
+  # convert to DTM
+  shipping_dtm = DocumentTermMatrix(shipping_corpus)
+  
+  # convert to dataframe
+  shipping_data_test = as.data.frame(as.matrix(shipping_dtm))
+  
+  # 6. Merge the testing DTM with training DTM, with testing DTM 1s for all terms and training DTM 0s for all terms
+  shipping_add_data = shipping_dataset[1,]
+  shipping_add_data[shipping_add_data == 1] = 0
+  shipping_data_test=cbind(shipping_data_test,shipping_add_data)
+  
+  # 7. Predict the answer with the trained SVM model
+  shipping_p = predict(shipping_svmfit, shipping_data_test)
+  shipping_answer = as.character(shipping_p)
+  paste(shipping_answer)
+}
+mydeal <- data %>% filter(Area == "mydeal")
+# 1. Convert training questions into document term matrix (sparse matrix with 1s and 0s)
+#clean the text
+mydeal_corpus = VCorpus(VectorSource(mydeal$Question))
+mydeal_corpus = tm_map(mydeal_corpus, content_transformer(tolower))
+mydeal_corpus = tm_map(mydeal_corpus, removeNumbers)
+mydeal_corpus = tm_map(mydeal_corpus, removePunctuation)
+
+# corpus = tm_map(corpus, removeWords, stopwords())
+mydeal_corpus = tm_map(mydeal_corpus, stemDocument)
+mydeal_corpus = tm_map(mydeal_corpus, stripWhitespace)
+
+# convert to DTM
+mydeal_dtm = DocumentTermMatrix(mydeal_corpus)
+
+# convert to dataframe
+mydeal_dataset = as.data.frame(as.matrix(mydeal_dtm))
+
+# 2. Match the matrix of each training question with its corresponding answer to form a training matrix
+mydeal_data_train = cbind(mydeal['Answers'], mydeal_dataset)
+
+# 3. Train SVM model with the training matrix, specify type
+
+mydeal_svmfit = svm(
+  Answers ~ .,
+  mydeal_data_train,
+  kernel = "linear",
+  type = "C",
+  cost = 100,
+  scale = FALSE
+)
+
+# 4. Propose a testing quesiton and build the prediction function
+mydealpred = function(x) {
+  # 5. Convert the testing question into document term matrix (sparse matrix with 1s and 0s)
+  #clean the text
+  mydeal_corpus = VCorpus(VectorSource(x))
+  mydeal_corpus = tm_map(mydeal_corpus, content_transformer(tolower))
+  mydeal_corpus = tm_map(mydeal_corpus, removeNumbers)
+  mydeal_corpus = tm_map(mydeal_corpus, removePunctuation)
+  
+  # corpus = tm_map(corpus, removeWords, stopwords())
+  mydeal_corpus = tm_map(mydeal_corpus, stemDocument)
+  mydeal_corpus = tm_map(mydeal_corpus, stripWhitespace)
+  
+  # convert to DTM
+  mydeal_dtm = DocumentTermMatrix(mydeal_corpus)
+  
+  # convert to dataframe
+  mydeal_data_test = as.data.frame(as.matrix(mydeal_dtm))
+  
+  # 6. Merge the testing DTM with training DTM, with testing DTM 1s for all terms and training DTM 0s for all terms
+  mydeal_add_data = mydeal_dataset[1,]
+  mydeal_add_data[mydeal_add_data == 1] = 0
+  mydeal_data_test = cbind(mydeal_data_test, mydeal_add_data)
+  
+  # 7. Predict the answer with the trained SVM model
+  mydeal_p = predict(mydeal_svmfit, mydeal_data_test)
+  mydeal_answer = as.character(mydeal_p)
+  paste(mydeal_answer)
 }
