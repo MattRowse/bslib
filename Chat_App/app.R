@@ -4,15 +4,15 @@ library(shiny)
 library(shinydashboard)
 library(ggplot2)
 library(tidyr)
-library(bslib)
-library(thematic)
+#library(bslib)
+#library(thematic)
 source("make_model.r")
 
 ## create a base theme for bslib
-theme <- bs_theme(bootswatch = "minty")
+#theme <- bs_theme(bootswatch = "minty")
 
 # Let thematic know to use the font from bs_lib
-thematic_shiny(font = "auto")
+#thematic_shiny(font = "auto")
 
 ui <- shinyUI(
   navbarPage(
@@ -20,7 +20,7 @@ ui <- shinyUI(
   tabPanel(
     "Ask a question",
     fluidPage(
-     theme = theme,
+#     theme = theme,
       div(
         selectInput(
           "category_field",
@@ -122,7 +122,7 @@ ui <- shinyUI(
         "train_models",
         "Retrain Question Models",
         icon("paper-plane"),
-        style = "color: #fff; background-color: #337ab7; border-color: #2e6da4"
+        style = "color: #fff; background-color: #f50000; border-color: #940000"
       )),
       
       helpText(
@@ -153,7 +153,7 @@ server <- shinyServer(function(input, output, session) {
         out <- ebaypred(toString(input$question_field))
       }
       if (input$category_field == "google") {
-        out <- xeropred(toString(input$question_field))
+        out <- googlepred(toString(input$question_field))
       }
       if (input$category_field == "integrations") {
         out <- integrationspred(toString(input$question_field))
@@ -173,6 +173,9 @@ server <- shinyServer(function(input, output, session) {
       if (input$category_field == "payments") {
         out <- paymentspred(toString(input$question_field))
       }
+      if (input$category_field == "pos") {
+        out <- pospred(toString(input$question_field))
+      }
       if (input$category_field == "shipping") {
         out <- shippingpred(toString(input$question_field))
       }
@@ -180,7 +183,7 @@ server <- shinyServer(function(input, output, session) {
         out <- trademepred(toString(input$question_field))
       }
       if (input$category_field == "webstore") {
-        out <- xeropred(toString(input$question_field))
+        out <- webstorepred(toString(input$question_field))
       }
       if (input$category_field == "xero") {
         out <- xeropred(toString(input$question_field))
@@ -215,6 +218,7 @@ server <- shinyServer(function(input, output, session) {
       logs <- logs %>%
         add_row(
           area = as.character(input$update_category_field),
+          area_update = as.character(input$update_category_field),
           question_update = as.character(input$db_question_field),
           answer_update = as.character(input$Q_answer_field),
           timestamp = ymd_hms(Sys.time())
@@ -294,7 +298,9 @@ server <- shinyServer(function(input, output, session) {
   
   observeEvent(input$time_selection, {
     output$question_table <-
-      renderDataTable(logs %>% select(question, answer, timestamp) %>% drop_na())
+      renderDataTable(logs %>% 
+                        filter(question != "NULL" & question != "") %>% 
+                          select(question, answer, timestamp) %>% drop_na())
   })
   
   output$download_log_Data <- downloadHandler(

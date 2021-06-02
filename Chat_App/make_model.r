@@ -815,10 +815,11 @@ googlepred = function(x){
   google_answer = as.character(googlep)
   return(paste(google_answer))
 }
-integrations <- data %>% filter(Area == "integrations")
+
+integrations_data <- data %>% filter(Area == "integrations")
 # 1. Convert training questions into document term matrix (sparse matrix with 1s and 0s)
 #clean the text
-integrations_corpus = VCorpus(VectorSource(integrations$Question))
+integrations_corpus = VCorpus(VectorSource(integrations_data$Question))
 integrations_corpus = tm_map(integrations_corpus, content_transformer(tolower))
 integrations_corpus = tm_map(integrations_corpus, removeNumbers)
 integrations_corpus = tm_map(integrations_corpus, removePunctuation)
@@ -834,7 +835,7 @@ integrations_dtm = DocumentTermMatrix(integrations_corpus)
 integrations_dataset = as.data.frame(as.matrix(integrations_dtm))
 
 # 2. Match the matrix of each training question with its corresponding answer to form a training matrix
-integrations_data_train = cbind(integrations['Answers'], integrations_dataset)
+integrations_data_train = cbind(integrations_data['Answers'], integrations_dataset)
 
 # 3. Train SVM model with the training matrix, specify type
 
@@ -848,7 +849,7 @@ integrations_svmfit = svm(
 )
 
 # 4. Propose a testing quesiton and build the prediction function
-integrations = function(x) {
+integrationspred = function(x) {
   # 5. Convert the testing question into document term matrix (sparse matrix with 1s and 0s)
   #clean the text
   integrations_corpus = VCorpus(VectorSource(x))
@@ -875,4 +876,123 @@ integrations = function(x) {
   integrations_p = predict(integrations_svmfit, integrations_data_test)
   integrations_answer = as.character(integrations_p)
   paste(integrations_answer)
+}
+
+trademe_data <- data %>% filter(Area=="trademe")
+# 1. Convert training questions into document term matrix (sparse matrix with 1s and 0s)
+#clean the text
+trademe_corpus = VCorpus(VectorSource(trademe_data$Question))
+trademe_corpus = tm_map(trademe_corpus, content_transformer(tolower))
+#ebay_corpus = tm_map(ebay_corpus, removeNumbers)
+trademe_corpus = tm_map(trademe_corpus, removePunctuation)
+
+# ebay_corpus = tm_map(ebay_corpus, removeWords, stopwords())
+trademe_corpus = tm_map(trademe_corpus, stemDocument)
+trademe_corpus = tm_map(trademe_corpus, stripWhitespace)
+
+# convert to DTM
+trademe_dtm = DocumentTermMatrix(trademe_corpus)
+
+# convert to dataframe
+trademe_dataset = as.data.frame(as.matrix(trademe_dtm))
+
+
+# 2. Match the matrix of each training question with its corresponding answer to form a training matrix
+trademe_data_train = cbind(trademe_data['Answers'], trademe_dataset)
+
+# 3. Train SVM model with the training matrix, specify type
+trademe_svmfit = svm(Answers ~., trademe_data_train, kernel = "linear",  type = "C", cost = 100, scale = FALSE)
+
+# 4. Propose a testing quesiton and build the prediction function
+trademepred = function(x){
+  
+  # 5. Convert the testing question into document term matrix (sparse matrix with 1s and 0s)
+  #clean the text
+  trademecorpus = VCorpus(VectorSource(x))
+  trademecorpus = tm_map(trademecorpus, content_transformer(tolower))
+  #ebaycorpus = tm_map(ebaycorpus, removeNumbers)
+  trademecorpus = tm_map(trademecorpus, removePunctuation)
+  
+  # corpus = tm_map(corpus, removeWords, stopwords())
+  trademecorpus = tm_map(trademecorpus, stemDocument)
+  trademecorpus = tm_map(trademecorpus, removePunctuation)
+  trademecorpus = tm_map(trademecorpus, stripWhitespace)
+  
+  # convert to DTM
+  trademe_dtm = DocumentTermMatrix(trademecorpus)
+  
+  # convert to dataframe
+  trademe_data_test = as.data.frame(as.matrix(trademe_dtm))
+  
+  # 6. Merge the testing DTM with training DTM, with testing DTM 1s for all terms and training DTM 0s for all terms
+  trademe_add_data = trademe_dataset[1,]
+  trademe_add_data[trademe_add_data == 1] = 0
+  trademe_data_test=cbind(trademe_data_test,trademe_add_data)
+  
+  # 7. Predict the answer with the trained SVM model
+  trademep = predict(trademe_svmfit, trademe_data_test)
+  trademe_answer = as.character(trademep)
+  return(paste(trademe_answer))
+}
+
+webstore_data <- data %>% filter(Area == "webstore")
+# 1. Convert training questions into document term matrix (sparse matrix with 1s and 0s)
+#clean the text
+webstore_corpus = VCorpus(VectorSource(webstore_data$Question))
+webstore_corpus = tm_map(webstore_corpus, content_transformer(tolower))
+webstore_corpus = tm_map(webstore_corpus, removeNumbers)
+webstore_corpus = tm_map(webstore_corpus, removePunctuation)
+
+# corpus = tm_map(corpus, removeWords, stopwords())
+webstore_corpus = tm_map(webstore_corpus, stemDocument)
+webstore_corpus = tm_map(webstore_corpus, stripWhitespace)
+
+# convert to DTM
+webstore_dtm = DocumentTermMatrix(webstore_corpus)
+
+# convert to dataframe
+webstore_dataset = as.data.frame(as.matrix(webstore_dtm))
+
+# 2. Match the matrix of each training question with its corresponding answer to form a training matrix
+webstore_data_train = cbind(webstore_data['Answers'], webstore_dataset)
+
+# 3. Train SVM model with the training matrix, specify type
+
+webstore_svmfit = svm(
+  Answers ~ .,
+  webstore_data_train,
+  kernel = "linear",
+  type = "C",
+  cost = 100,
+  scale = FALSE
+)
+
+# 4. Propose a testing quesiton and build the prediction function
+webstorepred = function(x) {
+  # 5. Convert the testing question into document term matrix (sparse matrix with 1s and 0s)
+  #clean the text
+  webstore_corpus = VCorpus(VectorSource(x))
+  webstore_corpus = tm_map(webstore_corpus, content_transformer(tolower))
+  webstore_corpus = tm_map(webstore_corpus, removeNumbers)
+  webstore_corpus = tm_map(webstore_corpus, removePunctuation)
+  
+  # corpus = tm_map(corpus, removeWords, stopwords())
+  webstore_corpus = tm_map(webstore_corpus, stemDocument)
+  webstore_corpus = tm_map(webstore_corpus, stripWhitespace)
+  
+  # convert to DTM
+  webstore_dtm = DocumentTermMatrix(webstore_corpus)
+  
+  # convert to dataframe
+  webstore_data_test = as.data.frame(as.matrix(webstore_dtm))
+  
+  # 6. Merge the testing DTM with training DTM, with testing DTM 1s for all terms and training DTM 0s for all terms
+  webstore_add_data = webstore_dataset[1,]
+  webstore_add_data[webstore_add_data == 1] = 0
+  webstore_data_test = cbind(webstore_data_test, webstore_add_data)
+  
+  # 7. Predict the answer with the trained SVM model
+  webstore_p = predict(webstore_svmfit, webstore_data_test)
+  webstore_answer = as.character(webstore_p)
+  paste(webstore_answer)
 }
