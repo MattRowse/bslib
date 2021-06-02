@@ -1,4 +1,4 @@
-FROM rocker/r-ver:3.6.2
+FROM rocker/r-ver:3.5.0
 #add Ngnix for reverse proxy & authentication then apache2-utils for user management
 RUN apt-get update && \
     apt-get install -y nginx apache2-utils && \

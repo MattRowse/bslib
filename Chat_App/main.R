@@ -52,3 +52,7 @@
 # require(jsonlite)
 
 # this.answer <- fromJSON(rawToChar(api_output$content))
+
+#add users
+# docker exec -it containerid /bin/sh
+# htpasswd /etc/nginx/.htpasswd username
