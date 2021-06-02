@@ -3,22 +3,24 @@ setwd(getwd())
 library(shiny)
 library(shinydashboard)
 library(ggplot2)
-#library(bslib)
-#library(thematic)
+library(tidyr)
+library(bslib)
+library(thematic)
 source("make_model.r")
 
 ## create a base theme for bslib
-#theme <- bs_theme(bootswatch = "minty")
+theme <- bs_theme(bootswatch = "minty")
 
 # Let thematic know to use the font from bs_lib
-#thematic_shiny(font = "auto")
+thematic_shiny(font = "auto")
 
-ui <- shinyUI(navbarPage(
+ui <- shinyUI(
+  navbarPage(
   "Support Chatbot",
   tabPanel(
     "Ask a question",
     fluidPage(
- #    theme = theme,
+     theme = theme,
       div(
         selectInput(
           "category_field",
@@ -40,7 +42,10 @@ ui <- shinyUI(navbarPage(
       ),
       br(),
       div(style = "display:inline-block",
-          actionButton("send", "Find your answer")),
+          actionButton("send", "Find your answer",
+                       icon("paper-plane"),
+                       style = "color: #fff; background-color: #337ab7; border-color: #2e6da4"
+                       )),
       br(),
       verbatimTextOutput("chatbox",
                          placeholder = TRUE)
@@ -55,8 +60,7 @@ ui <- shinyUI(navbarPage(
         choices = unique(sort(data$Area)),
         selected = "Make a selection",
         width = "300px"
-      ),
-    ),
+      )),
     br(),
     uiOutput("chatbox_t"),
     div(
@@ -80,7 +84,9 @@ ui <- shinyUI(navbarPage(
     ),
     br(),
     div(style = "display:inline-block",
-        actionButton("question_update", "Update database")),
+        actionButton("question_update", "Update database",
+                     icon("paper-plane"),
+                     style = "color: #fff; background-color: #337ab7; border-color: #2e6da4")),
     br(),
     verbatimTextOutput("confirm_chatbox",
                        placeholder = TRUE)
@@ -107,23 +113,29 @@ ui <- shinyUI(navbarPage(
     plotOutput("myusage"),
     plotOutput("myplot"),
     plotOutput("line_chart"),
+    plotOutput("question_count"),
     dataTableOutput("question_table"),
     div(
-    downloadButton("download_log_Data", "Download Logs"),
-    downloadButton("download_question_Data", "Download Questions"),
-    actionButton("train_models", "Retrain Question Models",
-                 icon("paper-plane"),
-                 style="color: #fff; background-color: #337ab7; border-color: #2e6da4"),
-              
-    helpText("When you click the retrain models button above, the application could stall, while the server is processing")
+      downloadButton("download_log_Data", "Download Logs",style = "color: #fff; background-color: #337ab7; border-color: #2e6da4"),
+      downloadButton("download_question_Data", "Download Questions",style = "color: #fff; background-color: #337ab7; border-color: #2e6da4"),
+      actionButton(
+        "train_models",
+        "Retrain Question Models",
+        icon("paper-plane"),
+        style = "color: #fff; background-color: #337ab7; border-color: #2e6da4"
+      )),
+      
+      helpText(
+        div(
+          style = "display:inline-block",
+        "When you click the retrain models button above, the application could stall, while the server is processing")
     )
   )
-  )
-)
+))
 
 
 server <- shinyServer(function(input, output, session) {
-  observeEvent(input$send, {
+  observeEvent(input$send, {   
     output$chatbox <- renderText({
       if (input$category_field == "amazon") {
         out <- amazonpred(toString(input$question_field))
@@ -143,6 +155,9 @@ server <- shinyServer(function(input, output, session) {
       if (input$category_field == "google") {
         out <- xeropred(toString(input$question_field))
       }
+      if (input$category_field == "integrations") {
+        out <- integrationspred(toString(input$question_field))
+      }
       if (input$category_field == "inventory") {
         out <- inventorypred(toString(input$question_field))
       }
@@ -160,6 +175,9 @@ server <- shinyServer(function(input, output, session) {
       }
       if (input$category_field == "shipping") {
         out <- shippingpred(toString(input$question_field))
+      }
+      if (input$category_field == "trademe") {
+        out <- trademepred(toString(input$question_field))
       }
       if (input$category_field == "webstore") {
         out <- xeropred(toString(input$question_field))
@@ -204,57 +222,84 @@ server <- shinyServer(function(input, output, session) {
       saveRDS(logs, file = "logs.RDS")
       logs = readRDS("logs.RDS")
     })
-
+    
   })
   observeEvent(input$time_selection, {
-  output$myplot <- renderPlot(
-    logs %>% 
-      filter(timestamp >=input$time_selection[1] & timestamp <= input$time_selection[2]) %>% 
-      group_by(area,question_update) %>% count(question_update) %>% ggplot(aes(area, n, fill = area)) +
-      geom_col()+
-      theme_minimal()+
-      ggtitle("Questions Updated")+
-      labs(x="Topic",y="Volume")+
-      theme_light()+
-      theme(legend.position = "none")+
-      coord_flip()
-  )
+    output$myplot <- renderPlot(
+      logs %>%
+        filter(
+          timestamp >= input$time_selection[1] &
+            timestamp <= input$time_selection[2]
+        ) %>%
+        group_by(area, question_update) %>% count(question_update) %>% ggplot(aes(area, n, fill = area)) +
+        geom_col() +
+        theme_minimal() +
+        ggtitle("Questions Updated") +
+        labs(x = "Topic", y = "Volume") +
+        theme_light() +
+        theme(legend.position = "none") +
+        coord_flip()
+    )
   })
   observeEvent(input$time_selection, {
     output$myusage <- renderPlot(
-      logs %>% 
-        filter(timestamp >=input$time_selection[1] & timestamp <= input$time_selection[2] & question !=is.na(question)) %>% 
-        group_by(area,question) %>% count(question) %>% ggplot(aes(area, n, fill = area)) +
-        geom_col()+
-        theme_minimal()+
-        ggtitle("Queries Asked")+
-        labs(x="Topic",y="Volume")+
-        theme_light()+
-        theme(legend.position = "none")+
+      logs %>%
+        filter(
+          timestamp >= input$time_selection[1] &
+            timestamp <= input$time_selection[2] &
+            question != is.na(question)
+        ) %>%
+        group_by(area, question) %>% count(question) %>% ggplot(aes(area, n, fill = area)) +
+        geom_col() +
+        theme_minimal() +
+        ggtitle("Queries Asked") +
+        labs(x = "Topic", y = "Volume") +
+        theme_light() +
+        theme(legend.position = "none") +
         coord_flip()
     )
   })
   observeEvent(input$time_selection, {
     output$line_chart <- renderPlot(
-      logs %>% 
-        filter(timestamp >=input$time_selection[1] & timestamp <= input$time_selection[2]) %>% 
-        mutate(Date_Time = floor_date(timestamp,unit = "days")) %>% 
-        group_by(Date_Time) %>% count(question) %>% ggplot(aes(Date_Time,n)) +
-        geom_line()+
-        theme_minimal()+
-        ggtitle("Questions Asked")+
-        labs(x="Date",y="Volume")+
-        theme_light()+
+      logs %>%
+        filter(
+          timestamp >= input$time_selection[1] &
+            timestamp <= input$time_selection[2]
+        ) %>%
+        mutate(Date_Time = floor_date(timestamp, unit = "days")) %>%
+        group_by(Date_Time) %>% count(question) %>% ggplot(aes(Date_Time, n)) +
+        geom_line() +
+        theme_minimal() +
+        ggtitle("Questions Asked") +
+        labs(x = "Date", y = "Volume") +
+        theme_light() +
         theme(legend.position = "none")
     )
   })
+  
   observeEvent(input$time_selection, {
-    output$question_table <- renderDataTable(logs %>% select(question,answer,timestamp) %>% drop_na())
+    output$question_count <- renderPlot(
+      data %>%
+        group_by(Area,Answers) %>% count(Answers) %>% ggplot(aes(Area, n, fill=Area)) +
+        geom_col() +
+        theme_minimal() +
+        ggtitle("Questions in Database") +
+        labs(x = "Area", y = "Question Count") +
+        theme_light() +
+        theme(legend.position = "none")+
+        coord_flip()
+    )
+  })
+  
+  
+  observeEvent(input$time_selection, {
+    output$question_table <-
+      renderDataTable(logs %>% select(question, answer, timestamp) %>% drop_na())
   })
   
   output$download_log_Data <- downloadHandler(
     filename = function() {
-      paste("logsdata-", Sys.Date(), ".csv", sep="")
+      paste("logsdata-", Sys.Date(), ".csv", sep = "")
     },
     content = function(file) {
       write.csv(logs, file)
@@ -263,7 +308,7 @@ server <- shinyServer(function(input, output, session) {
   
   output$download_question_Data <- downloadHandler(
     filename = function() {
-      paste("questions-", Sys.Date(), ".csv", sep="")
+      paste("questions-", Sys.Date(), ".csv", sep = "")
     },
     content = function(file) {
       write.csv(data, file)
@@ -271,8 +316,8 @@ server <- shinyServer(function(input, output, session) {
   )
   
   observeEvent(input$train_models, {
-   train <- source("make_model.r")
-   train
+    train <- source("make_model.r")
+    train
   })
 })
 shinyApp(ui, server)

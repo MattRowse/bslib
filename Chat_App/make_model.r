@@ -758,3 +758,121 @@ mydealpred = function(x) {
   mydeal_answer = as.character(mydeal_p)
   paste(mydeal_answer)
 }
+
+google_data <- data %>% filter(Area=="google")
+# 1. Convert training questions into document term matrix (sparse matrix with 1s and 0s)
+#clean the text
+google_corpus = VCorpus(VectorSource(google_data$Question))
+google_corpus = tm_map(google_corpus, content_transformer(tolower))
+#ebay_corpus = tm_map(ebay_corpus, removeNumbers)
+google_corpus = tm_map(google_corpus, removePunctuation)
+
+# ebay_corpus = tm_map(ebay_corpus, removeWords, stopwords())
+google_corpus = tm_map(google_corpus, stemDocument)
+google_corpus = tm_map(google_corpus, stripWhitespace)
+
+# convert to DTM
+google_dtm = DocumentTermMatrix(google_corpus)
+
+# convert to dataframe
+google_dataset = as.data.frame(as.matrix(google_dtm))
+
+
+# 2. Match the matrix of each training question with its corresponding answer to form a training matrix
+google_data_train = cbind(google_data['Answers'], google_dataset)
+
+# 3. Train SVM model with the training matrix, specify type
+google_svmfit = svm(Answers ~., google_data_train, kernel = "linear",  type = "C", cost = 100, scale = FALSE)
+
+# 4. Propose a testing quesiton and build the prediction function
+googlepred = function(x){
+  
+  # 5. Convert the testing question into document term matrix (sparse matrix with 1s and 0s)
+  #clean the text
+  googlecorpus = VCorpus(VectorSource(x))
+  googlecorpus = tm_map(googlecorpus, content_transformer(tolower))
+  #ebaycorpus = tm_map(ebaycorpus, removeNumbers)
+  googlecorpus = tm_map(googlecorpus, removePunctuation)
+  
+  # corpus = tm_map(corpus, removeWords, stopwords())
+  googlecorpus = tm_map(googlecorpus, stemDocument)
+  googlecorpus = tm_map(googlecorpus, removePunctuation)
+  googlecorpus = tm_map(googlecorpus, stripWhitespace)
+  
+  # convert to DTM
+  google_dtm = DocumentTermMatrix(googlecorpus)
+  
+  # convert to dataframe
+  google_data_test = as.data.frame(as.matrix(google_dtm))
+  
+  # 6. Merge the testing DTM with training DTM, with testing DTM 1s for all terms and training DTM 0s for all terms
+  google_add_data = google_dataset[1,]
+  google_add_data[google_add_data == 1] = 0
+  google_data_test=cbind(google_data_test,google_add_data)
+  
+  # 7. Predict the answer with the trained SVM model
+  googlep = predict(google_svmfit, google_data_test)
+  google_answer = as.character(googlep)
+  return(paste(google_answer))
+}
+integrations <- data %>% filter(Area == "integrations")
+# 1. Convert training questions into document term matrix (sparse matrix with 1s and 0s)
+#clean the text
+integrations_corpus = VCorpus(VectorSource(integrations$Question))
+integrations_corpus = tm_map(integrations_corpus, content_transformer(tolower))
+integrations_corpus = tm_map(integrations_corpus, removeNumbers)
+integrations_corpus = tm_map(integrations_corpus, removePunctuation)
+
+# corpus = tm_map(corpus, removeWords, stopwords())
+integrations_corpus = tm_map(integrations_corpus, stemDocument)
+integrations_corpus = tm_map(integrations_corpus, stripWhitespace)
+
+# convert to DTM
+integrations_dtm = DocumentTermMatrix(integrations_corpus)
+
+# convert to dataframe
+integrations_dataset = as.data.frame(as.matrix(integrations_dtm))
+
+# 2. Match the matrix of each training question with its corresponding answer to form a training matrix
+integrations_data_train = cbind(integrations['Answers'], integrations_dataset)
+
+# 3. Train SVM model with the training matrix, specify type
+
+integrations_svmfit = svm(
+  Answers ~ .,
+  integrations_data_train,
+  kernel = "linear",
+  type = "C",
+  cost = 100,
+  scale = FALSE
+)
+
+# 4. Propose a testing quesiton and build the prediction function
+integrations = function(x) {
+  # 5. Convert the testing question into document term matrix (sparse matrix with 1s and 0s)
+  #clean the text
+  integrations_corpus = VCorpus(VectorSource(x))
+  integrations_corpus = tm_map(integrations_corpus, content_transformer(tolower))
+  integrations_corpus = tm_map(integrations_corpus, removeNumbers)
+  integrations_corpus = tm_map(integrations_corpus, removePunctuation)
+  
+  # corpus = tm_map(corpus, removeWords, stopwords())
+  integrations_corpus = tm_map(integrations_corpus, stemDocument)
+  integrations_corpus = tm_map(integrations_corpus, stripWhitespace)
+  
+  # convert to DTM
+  integrations_dtm = DocumentTermMatrix(integrations_corpus)
+  
+  # convert to dataframe
+  integrations_data_test = as.data.frame(as.matrix(integrations_dtm))
+  
+  # 6. Merge the testing DTM with training DTM, with testing DTM 1s for all terms and training DTM 0s for all terms
+  integrations_add_data = integrations_dataset[1,]
+  integrations_add_data[integrations_add_data == 1] = 0
+  integrations_data_test = cbind(integrations_data_test, integrations_add_data)
+  
+  # 7. Predict the answer with the trained SVM model
+  integrations_p = predict(integrations_svmfit, integrations_data_test)
+  integrations_answer = as.character(integrations_p)
+  paste(integrations_answer)
+}
