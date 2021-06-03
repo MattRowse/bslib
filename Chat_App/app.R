@@ -143,14 +143,29 @@ server <- shinyServer(function(input, output, session) {
       if (input$category_field == "catch") {
         out <- catchpred(toString(input$question_field))
       }
+      if (input$category_field == "customers") {
+        out <- customerspred(toString(input$question_field))
+      }
       if (input$category_field == "data") {
         out <- datapred(toString(input$question_field))
       }
       if (input$category_field == "design") {
         out <- designpred(toString(input$question_field))
       }
+      if (input$category_field == "dns") {
+        out <- dnspred(toString(input$question_field))
+      }
       if (input$category_field == "ebay") {
         out <- ebaypred(toString(input$question_field))
+      }
+      if (input$category_field == "emails") {
+        out <- emailspred(toString(input$question_field))
+      }
+      if (input$category_field == "facebook") {
+        out <- facebookpred(toString(input$question_field))
+      }
+      if (input$category_field == "instagram") {
+        out <- instagrampred(toString(input$question_field))
       }
       if (input$category_field == "google") {
         out <- googlepred(toString(input$question_field))
@@ -170,8 +185,14 @@ server <- shinyServer(function(input, output, session) {
       if (input$category_field == "mydeal") {
         out <- mydealpred(toString(input$question_field))
       }
+      if (input$category_field == "neto_analytics") {
+        out <- neto_analyticspred(toString(input$question_field))
+      }
       if (input$category_field == "payments") {
         out <- paymentspred(toString(input$question_field))
+      }
+      if (input$category_field == "permissions") {
+        out <- permissionspred(toString(input$question_field))
       }
       if (input$category_field == "pos") {
         out <- pospred(toString(input$question_field))
@@ -209,7 +230,7 @@ server <- shinyServer(function(input, output, session) {
         add_row(
           Area = as.character(input$update_category_field),
           Question = as.character(input$db_question_field),
-          Answers = as.character(input$Q_answer_field),
+          Answers = paste("Predicted question: ",Question,"\n",  "Predicted answer: ",as.character(input$Q_answer_field),sep="\n"),
           Timestamp = ymd_hms(Sys.time())
         )
       saveRDS(data, file = "data.RDS")
@@ -272,7 +293,7 @@ server <- shinyServer(function(input, output, session) {
         ) %>%
         mutate(Date_Time = floor_date(timestamp, unit = "days")) %>%
         group_by(Date_Time) %>% count(question) %>% ggplot(aes(Date_Time, n)) +
-        geom_line() +
+        geom_col() +
         theme_minimal() +
         ggtitle("Questions Asked") +
         labs(x = "Date", y = "Volume") +

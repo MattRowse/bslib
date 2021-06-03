@@ -6,7 +6,7 @@ library(tm)
 library(gsheet)
 library(e1071)
 
-# Chatbot for guiding customers to required documentation
+# Chatbot for guiding neto_analytics to required documentation
 
 # Methdology
 # 1. Convert training questions into document term matrix (sparse matrix with 1s and 0s)
@@ -21,6 +21,7 @@ library(e1071)
 #data = gsheet2tbl("https://docs.google.com/spreadsheets/d/1lq3tOwDrxD9ZEuKc_oYCI-2lb9octmcgbN2P274D6wk/edit#gid=0")
 #saveRDS(data, file = "data.RDS")
 data = readRDS(file = "data.RDS")
+stripWhitespace(data$Area)
 logs = readRDS(file = "logs.RDS")
 logs$timestamp <- ymd_hms(logs$timestamp)
 data1 <- data %>% filter(Area=="design")
@@ -995,4 +996,507 @@ webstorepred = function(x) {
   webstore_p = predict(webstore_svmfit, webstore_data_test)
   webstore_answer = as.character(webstore_p)
   paste(webstore_answer)
+}
+
+
+emails_data <- data %>% filter(Area == "emails")
+# 1. Convert training questions into document term matrix (sparse matrix with 1s and 0s)
+#clean the text
+emails_corpus = VCorpus(VectorSource(emails_data$Question))
+emails_corpus = tm_map(emails_corpus, content_transformer(tolower))
+emails_corpus = tm_map(emails_corpus, removeNumbers)
+emails_corpus = tm_map(emails_corpus, removePunctuation)
+
+# corpus = tm_map(corpus, removeWords, stopwords())
+emails_corpus = tm_map(emails_corpus, stemDocument)
+emails_corpus = tm_map(emails_corpus, stripWhitespace)
+
+# convert to DTM
+emails_dtm = DocumentTermMatrix(emails_corpus)
+
+# convert to dataframe
+emails_dataset = as.data.frame(as.matrix(emails_dtm))
+
+# 2. Match the matrix of each training question with its corresponding answer to form a training matrix
+emails_data_train = cbind(emails_data['Answers'], emails_dataset)
+
+# 3. Train SVM model with the training matrix, specify type
+
+emails_svmfit = svm(
+  Answers ~ .,
+  emails_data_train,
+  kernel = "linear",
+  type = "C",
+  cost = 100,
+  scale = FALSE
+)
+
+# 4. Propose a testing quesiton and build the prediction function
+emailspred = function(x) {
+  # 5. Convert the testing question into document term matrix (sparse matrix with 1s and 0s)
+  #clean the text
+  emails_corpus = VCorpus(VectorSource(x))
+  emails_corpus = tm_map(emails_corpus, content_transformer(tolower))
+  emails_corpus = tm_map(emails_corpus, removeNumbers)
+  emails_corpus = tm_map(emails_corpus, removePunctuation)
+  
+  # corpus = tm_map(corpus, removeWords, stopwords())
+  emails_corpus = tm_map(emails_corpus, stemDocument)
+  emails_corpus = tm_map(emails_corpus, stripWhitespace)
+  
+  # convert to DTM
+  emails_dtm = DocumentTermMatrix(emails_corpus)
+  
+  # convert to dataframe
+  emails_data_test = as.data.frame(as.matrix(emails_dtm))
+  
+  # 6. Merge the testing DTM with training DTM, with testing DTM 1s for all terms and training DTM 0s for all terms
+  emails_add_data = emails_dataset[1,]
+  emails_add_data[emails_add_data == 1] = 0
+  emails_data_test = cbind(emails_data_test, emails_add_data)
+  
+  # 7. Predict the answer with the trained SVM model
+  emails_p = predict(emails_svmfit, emails_data_test)
+  emails_answer = as.character(emails_p)
+  paste(emails_answer)
+}
+
+facebook_data <- data %>% filter(Area == "facebook")
+# 1. Convert training questions into document term matrix (sparse matrix with 1s and 0s)
+#clean the text
+facebook_corpus = VCorpus(VectorSource(facebook_data$Question))
+facebook_corpus = tm_map(facebook_corpus, content_transformer(tolower))
+facebook_corpus = tm_map(facebook_corpus, removeNumbers)
+facebook_corpus = tm_map(facebook_corpus, removePunctuation)
+
+# corpus = tm_map(corpus, removeWords, stopwords())
+facebook_corpus = tm_map(facebook_corpus, stemDocument)
+facebook_corpus = tm_map(facebook_corpus, stripWhitespace)
+
+# convert to DTM
+facebook_dtm = DocumentTermMatrix(facebook_corpus)
+
+# convert to dataframe
+facebook_dataset = as.data.frame(as.matrix(facebook_dtm))
+
+# 2. Match the matrix of each training question with its corresponding answer to form a training matrix
+facebook_data_train = cbind(facebook_data['Answers'], facebook_dataset)
+
+# 3. Train SVM model with the training matrix, specify type
+
+facebook_svmfit = svm(
+  Answers ~ .,
+  facebook_data_train,
+  kernel = "linear",
+  type = "C",
+  cost = 100,
+  scale = FALSE
+)
+
+# 4. Propose a testing quesiton and build the prediction function
+facebookpred = function(x) {
+  # 5. Convert the testing question into document term matrix (sparse matrix with 1s and 0s)
+  #clean the text
+  facebook_corpus = VCorpus(VectorSource(x))
+  facebook_corpus = tm_map(facebook_corpus, content_transformer(tolower))
+  facebook_corpus = tm_map(facebook_corpus, removeNumbers)
+  facebook_corpus = tm_map(facebook_corpus, removePunctuation)
+  
+  # corpus = tm_map(corpus, removeWords, stopwords())
+  facebook_corpus = tm_map(facebook_corpus, stemDocument)
+  facebook_corpus = tm_map(facebook_corpus, stripWhitespace)
+  
+  # convert to DTM
+  facebook_dtm = DocumentTermMatrix(facebook_corpus)
+  
+  # convert to dataframe
+  facebook_data_test = as.data.frame(as.matrix(facebook_dtm))
+  
+  # 6. Merge the testing DTM with training DTM, with testing DTM 1s for all terms and training DTM 0s for all terms
+  facebook_add_data = facebook_dataset[1,]
+  facebook_add_data[facebook_add_data == 1] = 0
+  facebook_data_test = cbind(facebook_data_test, facebook_add_data)
+  
+  # 7. Predict the answer with the trained SVM model
+  facebook_p = predict(facebook_svmfit, facebook_data_test)
+  facebook_answer = as.character(facebook_p)
+  paste(facebook_answer)
+}
+
+
+
+instagram_data <- data %>% filter(Area == "instagram")
+# 1. Convert training questions into document term matrix (sparse matrix with 1s and 0s)
+#clean the text
+instagram_corpus = VCorpus(VectorSource(instagram_data$Question))
+instagram_corpus = tm_map(instagram_corpus, content_transformer(tolower))
+instagram_corpus = tm_map(instagram_corpus, removeNumbers)
+instagram_corpus = tm_map(instagram_corpus, removePunctuation)
+
+# corpus = tm_map(corpus, removeWords, stopwords())
+instagram_corpus = tm_map(instagram_corpus, stemDocument)
+instagram_corpus = tm_map(instagram_corpus, stripWhitespace)
+
+# convert to DTM
+instagram_dtm = DocumentTermMatrix(instagram_corpus)
+
+# convert to dataframe
+instagram_dataset = as.data.frame(as.matrix(instagram_dtm))
+
+# 2. Match the matrix of each training question with its corresponding answer to form a training matrix
+instagram_data_train = cbind(instagram_data['Answers'], instagram_dataset)
+
+# 3. Train SVM model with the training matrix, specify type
+
+instagram_svmfit = svm(
+  Answers ~ .,
+  instagram_data_train,
+  kernel = "linear",
+  type = "C",
+  cost = 100,
+  scale = FALSE
+)
+
+# 4. Propose a testing quesiton and build the prediction function
+instagrampred = function(x) {
+  # 5. Convert the testing question into document term matrix (sparse matrix with 1s and 0s)
+  #clean the text
+  instagram_corpus = VCorpus(VectorSource(x))
+  instagram_corpus = tm_map(instagram_corpus, content_transformer(tolower))
+  instagram_corpus = tm_map(instagram_corpus, removeNumbers)
+  instagram_corpus = tm_map(instagram_corpus, removePunctuation)
+  
+  # corpus = tm_map(corpus, removeWords, stopwords())
+  instagram_corpus = tm_map(instagram_corpus, stemDocument)
+  instagram_corpus = tm_map(instagram_corpus, stripWhitespace)
+  
+  # convert to DTM
+  instagram_dtm = DocumentTermMatrix(instagram_corpus)
+  
+  # convert to dataframe
+  instagram_data_test = as.data.frame(as.matrix(instagram_dtm))
+  
+  # 6. Merge the testing DTM with training DTM, with testing DTM 1s for all terms and training DTM 0s for all terms
+  instagram_add_data = instagram_dataset[1,]
+  instagram_add_data[instagram_add_data == 1] = 0
+  instagram_data_test = cbind(instagram_data_test, instagram_add_data)
+  
+  # 7. Predict the answer with the trained SVM model
+  instagram_p = predict(instagram_svmfit, instagram_data_test)
+  instagram_answer = as.character(instagram_p)
+  paste(instagram_answer)
+}
+
+neto_analytics_data <- data %>% filter(Area == "neto_analytics")
+# 1. Convert training questions into document term matrix (sparse matrix with 1s and 0s)
+#clean the text
+neto_analytics_corpus = VCorpus(VectorSource(neto_analytics_data$Question))
+neto_analytics_corpus = tm_map(neto_analytics_corpus, content_transformer(tolower))
+neto_analytics_corpus = tm_map(neto_analytics_corpus, removeNumbers)
+neto_analytics_corpus = tm_map(neto_analytics_corpus, removePunctuation)
+
+# corpus = tm_map(corpus, removeWords, stopwords())
+neto_analytics_corpus = tm_map(neto_analytics_corpus, stemDocument)
+neto_analytics_corpus = tm_map(neto_analytics_corpus, stripWhitespace)
+
+# convert to DTM
+neto_analytics_dtm = DocumentTermMatrix(neto_analytics_corpus)
+
+# convert to dataframe
+neto_analytics_dataset = as.data.frame(as.matrix(neto_analytics_dtm))
+
+# 2. Match the matrix of each training question with its corresponding answer to form a training matrix
+neto_analytics_data_train = cbind(neto_analytics_data['Answers'], neto_analytics_dataset)
+
+# 3. Train SVM model with the training matrix, specify type
+
+neto_analytics_svmfit = svm(
+  Answers ~ .,
+  neto_analytics_data_train,
+  kernel = "linear",
+  type = "C",
+  cost = 100,
+  scale = FALSE
+)
+
+# 4. Propose a testing quesiton and build the prediction function
+neto_analyticspred = function(x) {
+  # 5. Convert the testing question into document term matrix (sparse matrix with 1s and 0s)
+  #clean the text
+  neto_analytics_corpus = VCorpus(VectorSource(x))
+  neto_analytics_corpus = tm_map(neto_analytics_corpus, content_transformer(tolower))
+  neto_analytics_corpus = tm_map(neto_analytics_corpus, removeNumbers)
+  neto_analytics_corpus = tm_map(neto_analytics_corpus, removePunctuation)
+  
+  # corpus = tm_map(corpus, removeWords, stopwords())
+  neto_analytics_corpus = tm_map(neto_analytics_corpus, stemDocument)
+  neto_analytics_corpus = tm_map(neto_analytics_corpus, stripWhitespace)
+  
+  # convert to DTM
+  neto_analytics_dtm = DocumentTermMatrix(neto_analytics_corpus)
+  
+  # convert to dataframe
+  neto_analytics_data_test = as.data.frame(as.matrix(neto_analytics_dtm))
+  
+  # 6. Merge the testing DTM with training DTM, with testing DTM 1s for all terms and training DTM 0s for all terms
+  neto_analytics_add_data = neto_analytics_dataset[1,]
+  neto_analytics_add_data[neto_analytics_add_data == 1] = 0
+  neto_analytics_data_test = cbind(neto_analytics_data_test, neto_analytics_add_data)
+  
+  # 7. Predict the answer with the trained SVM model
+  neto_analytics_p = predict(neto_analytics_svmfit, neto_analytics_data_test)
+  neto_analytics_answer = as.character(neto_analytics_p)
+  paste(neto_analytics_answer)
+}
+
+
+dns_data <- data %>% filter(Area == "dns")
+# 1. Convert training questions into document term matrix (sparse matrix with 1s and 0s)
+#clean the text
+dns_corpus = VCorpus(VectorSource(dns_data$Question))
+dns_corpus = tm_map(dns_corpus, content_transformer(tolower))
+dns_corpus = tm_map(dns_corpus, removeNumbers)
+dns_corpus = tm_map(dns_corpus, removePunctuation)
+
+# corpus = tm_map(corpus, removeWords, stopwords())
+dns_corpus = tm_map(dns_corpus, stemDocument)
+dns_corpus = tm_map(dns_corpus, stripWhitespace)
+
+# convert to DTM
+dns_dtm = DocumentTermMatrix(dns_corpus)
+
+# convert to dataframe
+dns_dataset = as.data.frame(as.matrix(dns_dtm))
+
+# 2. Match the matrix of each training question with its corresponding answer to form a training matrix
+dns_data_train = cbind(dns_data['Answers'], dns_dataset)
+
+# 3. Train SVM model with the training matrix, specify type
+
+dns_svmfit = svm(
+  Answers ~ .,
+  dns_data_train,
+  kernel = "linear",
+  type = "C",
+  cost = 100,
+  scale = FALSE
+)
+
+# 4. Propose a testing quesiton and build the prediction function
+dnspred = function(x) {
+  # 5. Convert the testing question into document term matrix (sparse matrix with 1s and 0s)
+  #clean the text
+  dns_corpus = VCorpus(VectorSource(x))
+  dns_corpus = tm_map(dns_corpus, content_transformer(tolower))
+  dns_corpus = tm_map(dns_corpus, removeNumbers)
+  dns_corpus = tm_map(dns_corpus, removePunctuation)
+  
+  # corpus = tm_map(corpus, removeWords, stopwords())
+  dns_corpus = tm_map(dns_corpus, stemDocument)
+  dns_corpus = tm_map(dns_corpus, stripWhitespace)
+  
+  # convert to DTM
+  dns_dtm = DocumentTermMatrix(dns_corpus)
+  
+  # convert to dataframe
+  dns_data_test = as.data.frame(as.matrix(dns_dtm))
+  
+  # 6. Merge the testing DTM with training DTM, with testing DTM 1s for all terms and training DTM 0s for all terms
+  dns_add_data = dns_dataset[1,]
+  dns_add_data[dns_add_data == 1] = 0
+  dns_data_test = cbind(dns_data_test, dns_add_data)
+  
+  # 7. Predict the answer with the trained SVM model
+  dns_p = predict(dns_svmfit, dns_data_test)
+  dns_answer = as.character(dns_p)
+  paste(dns_answer)
+}
+
+
+
+instagram_data <- data %>% filter(Area == "instagram")
+# 1. Convert training questions into document term matrix (sparse matrix with 1s and 0s)
+#clean the text
+instagram_corpus = VCorpus(VectorSource(instagram_data$Question))
+instagram_corpus = tm_map(instagram_corpus, content_transformer(tolower))
+instagram_corpus = tm_map(instagram_corpus, removeNumbers)
+instagram_corpus = tm_map(instagram_corpus, removePunctuation)
+
+# corpus = tm_map(corpus, removeWords, stopwords())
+instagram_corpus = tm_map(instagram_corpus, stemDocument)
+instagram_corpus = tm_map(instagram_corpus, stripWhitespace)
+
+# convert to DTM
+instagram_dtm = DocumentTermMatrix(instagram_corpus)
+
+# convert to dataframe
+instagram_dataset = as.data.frame(as.matrix(instagram_dtm))
+
+# 2. Match the matrix of each training question with its corresponding answer to form a training matrix
+instagram_data_train = cbind(instagram_data['Answers'], instagram_dataset)
+
+# 3. Train SVM model with the training matrix, specify type
+
+instagram_svmfit = svm(
+  Answers ~ .,
+  instagram_data_train,
+  kernel = "linear",
+  type = "C",
+  cost = 100,
+  scale = FALSE
+)
+
+# 4. Propose a testing quesiton and build the prediction function
+instagrampred = function(x) {
+  # 5. Convert the testing question into document term matrix (sparse matrix with 1s and 0s)
+  #clean the text
+  instagram_corpus = VCorpus(VectorSource(x))
+  instagram_corpus = tm_map(instagram_corpus, content_transformer(tolower))
+  instagram_corpus = tm_map(instagram_corpus, removeNumbers)
+  instagram_corpus = tm_map(instagram_corpus, removePunctuation)
+  
+  # corpus = tm_map(corpus, removeWords, stopwords())
+  instagram_corpus = tm_map(instagram_corpus, stemDocument)
+  instagram_corpus = tm_map(instagram_corpus, stripWhitespace)
+  
+  # convert to DTM
+  instagram_dtm = DocumentTermMatrix(instagram_corpus)
+  
+  # convert to dataframe
+  instagram_data_test = as.data.frame(as.matrix(instagram_dtm))
+  
+  # 6. Merge the testing DTM with training DTM, with testing DTM 1s for all terms and training DTM 0s for all terms
+  instagram_add_data = instagram_dataset[1,]
+  instagram_add_data[instagram_add_data == 1] = 0
+  instagram_data_test = cbind(instagram_data_test, instagram_add_data)
+  
+  # 7. Predict the answer with the trained SVM model
+  instagram_p = predict(instagram_svmfit, instagram_data_test)
+  instagram_answer = as.character(instagram_p)
+  paste(instagram_answer)
+}
+
+customers_data <- data %>% filter(Area == "customers")
+# 1. Convert training questions into document term matrix (sparse matrix with 1s and 0s)
+#clean the text
+customers_corpus = VCorpus(VectorSource(customers_data$Question))
+customers_corpus = tm_map(customers_corpus, content_transformer(tolower))
+customers_corpus = tm_map(customers_corpus, removeNumbers)
+customers_corpus = tm_map(customers_corpus, removePunctuation)
+
+# corpus = tm_map(corpus, removeWords, stopwords())
+customers_corpus = tm_map(customers_corpus, stemDocument)
+customers_corpus = tm_map(customers_corpus, stripWhitespace)
+
+# convert to DTM
+customers_dtm = DocumentTermMatrix(customers_corpus)
+
+# convert to dataframe
+customers_dataset = as.data.frame(as.matrix(customers_dtm))
+
+# 2. Match the matrix of each training question with its corresponding answer to form a training matrix
+customers_data_train = cbind(customers_data['Answers'], customers_dataset)
+
+# 3. Train SVM model with the training matrix, specify type
+
+customers_svmfit = svm(
+  Answers ~ .,
+  customers_data_train,
+  kernel = "linear",
+  type = "C",
+  cost = 100,
+  scale = FALSE
+)
+
+# 4. Propose a testing quesiton and build the prediction function
+customerspred = function(x) {
+  # 5. Convert the testing question into document term matrix (sparse matrix with 1s and 0s)
+  #clean the text
+  customers_corpus = VCorpus(VectorSource(x))
+  customers_corpus = tm_map(customers_corpus, content_transformer(tolower))
+  customers_corpus = tm_map(customers_corpus, removeNumbers)
+  customers_corpus = tm_map(customers_corpus, removePunctuation)
+  
+  # corpus = tm_map(corpus, removeWords, stopwords())
+  customers_corpus = tm_map(customers_corpus, stemDocument)
+  customers_corpus = tm_map(customers_corpus, stripWhitespace)
+  
+  # convert to DTM
+  customers_dtm = DocumentTermMatrix(customers_corpus)
+  
+  # convert to dataframe
+  customers_data_test = as.data.frame(as.matrix(customers_dtm))
+  
+  # 6. Merge the testing DTM with training DTM, with testing DTM 1s for all terms and training DTM 0s for all terms
+  customers_add_data = customers_dataset[1,]
+  customers_add_data[customers_add_data == 1] = 0
+  customers_data_test = cbind(customers_data_test, customers_add_data)
+  
+  # 7. Predict the answer with the trained SVM model
+  customers_p = predict(customers_svmfit, customers_data_test)
+  customers_answer = as.character(customers_p)
+  paste(customers_answer)
+}
+
+
+permissions_data <- data %>% filter(Area == "permissions")
+# 1. Convert training questions into document term matrix (sparse matrix with 1s and 0s)
+#clean the text
+permissions_corpus = VCorpus(VectorSource(permissions_data$Question))
+permissions_corpus = tm_map(permissions_corpus, content_transformer(tolower))
+permissions_corpus = tm_map(permissions_corpus, removeNumbers)
+permissions_corpus = tm_map(permissions_corpus, removePunctuation)
+
+# corpus = tm_map(corpus, removeWords, stopwords())
+permissions_corpus = tm_map(permissions_corpus, stemDocument)
+permissions_corpus = tm_map(permissions_corpus, stripWhitespace)
+
+# convert to DTM
+permissions_dtm = DocumentTermMatrix(permissions_corpus)
+
+# convert to dataframe
+permissions_dataset = as.data.frame(as.matrix(permissions_dtm))
+
+# 2. Match the matrix of each training question with its corresponding answer to form a training matrix
+permissions_data_train = cbind(permissions_data['Answers'], permissions_dataset)
+
+# 3. Train SVM model with the training matrix, specify type
+
+permissions_svmfit = svm(
+  Answers ~ .,
+  permissions_data_train,
+  kernel = "linear",
+  type = "C",
+  cost = 100,
+  scale = FALSE
+)
+
+# 4. Propose a testing quesiton and build the prediction function
+permissionspred = function(x) {
+  # 5. Convert the testing question into document term matrix (sparse matrix with 1s and 0s)
+  #clean the text
+  permissions_corpus = VCorpus(VectorSource(x))
+  permissions_corpus = tm_map(permissions_corpus, content_transformer(tolower))
+  permissions_corpus = tm_map(permissions_corpus, removeNumbers)
+  permissions_corpus = tm_map(permissions_corpus, removePunctuation)
+  
+  # corpus = tm_map(corpus, removeWords, stopwords())
+  permissions_corpus = tm_map(permissions_corpus, stemDocument)
+  permissions_corpus = tm_map(permissions_corpus, stripWhitespace)
+  
+  # convert to DTM
+  permissions_dtm = DocumentTermMatrix(permissions_corpus)
+  
+  # convert to dataframe
+  permissions_data_test = as.data.frame(as.matrix(permissions_dtm))
+  
+  # 6. Merge the testing DTM with training DTM, with testing DTM 1s for all terms and training DTM 0s for all terms
+  permissions_add_data = permissions_dataset[1,]
+  permissions_add_data[permissions_add_data == 1] = 0
+  permissions_data_test = cbind(permissions_data_test, permissions_add_data)
+  
+  # 7. Predict the answer with the trained SVM model
+  permissions_p = predict(permissions_svmfit, permissions_data_test)
+  permissions_answer = as.character(permissions_p)
+  paste(permissions_answer)
 }
