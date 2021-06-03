@@ -2,7 +2,7 @@ FROM rocker/r-ver:3.5.0
 #add Ngnix for reverse proxy & authentication then apache2-utils for user management
 RUN apt-get update && \
     apt-get install -y nginx apache2-utils && \
-    htpasswd -bc /etc/nginx/.htpasswd test test 
+    htpasswd -bc /etc/nginx/.htpasswd test test
 
 RUN openssl req -batch -x509 -nodes -days 365 -newkey rsa:2048 \
         -keyout /etc/ssl/private/server.key \

@@ -49,7 +49,11 @@ ui <- shinyUI(
       br(),
       verbatimTextOutput("chatbox",
                          placeholder = TRUE)
-    )
+    ),
+      br(),
+      h5("Top 25 Trending Questions"),
+      h6("*From last 30 days"),
+      dataTableOutput("trending")
   ),
   tabPanel(
     "Update the question database",
@@ -221,6 +225,20 @@ server <- shinyServer(function(input, output, session) {
       out
     })
   })
+  
+  observeEvent(input$category_field, {
+    output$trending <- 
+      renderDataTable(logs %>% filter(area==input$category_field &
+                                      question != "NULL" & question != "" &
+                                      timestamp >= Sys.Date()-30 & timestamp <= Sys.Date()) %>%
+                                      select(question, answer) %>% 
+                                      count(question, answer, sort = TRUE) %>%
+                                      top_n(25) %>% 
+                                      select(question, answer))
+                                      
+                    
+  })
+  
   observeEvent(input$question_update, {
     output$confirm_chatbox <- renderText({
       "Thank you for contributing!"
