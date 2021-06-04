@@ -56,21 +56,17 @@ ui <- shinyUI(
     ),
 # value checboxes for users to provide quality feedback
       div(style = "display:inline-block",
-        actionBttn(
-          inputId = "helpful",
-          label = "Helpful!", 
-          style = "simple",
-          color = "success",
-          icon = icon("thumbs-up"),
-          size = "sm"
-        ),
-        actionBttn(
-          inputId = "not_helpful",
-          label = "Update this question!", 
-          style = "simple",
-          color = "danger",
-          icon = icon("thumbs-down"),
-          size = "sm"
+          actionButton(
+            "helpful",
+            "That was awesome!",
+            icon("thumbs-up"),
+            style = "color: #fff; background-color: #2e8b57; border-color: #355e3b"
+          ),
+        actionButton(
+          "not_helpful",
+          "Update this question!",
+          icon("thumbs-down"),
+          style = "color: #fff; background-color: #f50000; border-color: #940000"
         )),
 
       br(),
@@ -145,6 +141,7 @@ ui <- shinyUI(
     div(
       downloadButton("download_log_Data", "Download Logs",style = "color: #fff; background-color: #337ab7; border-color: #2e6da4"),
       downloadButton("download_question_Data", "Download Questions",style = "color: #fff; background-color: #337ab7; border-color: #2e6da4"),
+      downloadButton("download_feedback", "Download Feedback",style = "color: #fff; background-color: #337ab7; border-color: #2e6da4"),
       actionButton(
         "train_models",
         "Retrain Question Models",
@@ -161,9 +158,6 @@ ui <- shinyUI(
 ))
 
 server <- shinyServer(function(input, output, session) {
-  
-  # create value to write feedback against
-  feedback_row <- reactiveVal(nrow(logs))
   
   observeEvent(input$send, {   
     output$chatbox <- renderText({
@@ -255,9 +249,27 @@ server <- shinyServer(function(input, output, session) {
     })
   })
   
-#  observeEvent(input$helpful, { 
-#    logs$feedback[feedback_row] <- TRUE
-#  })
+  observeEvent(input$helpful, { 
+    feedback <- feedback %>%
+    add_row(
+      area = as.character(input$category_field),
+      question = as.character(input$question_field),
+      #answer = as.character(output$chatbox),
+      helpful = as.character("TRUE"),
+      timestamp = ymd_hms(Sys.time()))
+    saveRDS(feedback, file = "feedback.RDS")
+  })
+  
+  observeEvent(input$not_helpful, { 
+    feedback <- feedback %>%
+      add_row(
+        area = as.character(input$category_field),
+        question = as.character(input$question_field),
+        #answer = as.character(output$chatbox),
+        helpful = as.character("FALSE"),
+        timestamp = ymd_hms(Sys.time()))
+    saveRDS(feedback, file = "feedback.RDS")
+  })
   
   observeEvent(input$category_field, {
     output$teams_channel <- renderText({
@@ -475,6 +487,15 @@ server <- shinyServer(function(input, output, session) {
     },
     content = function(file) {
       write.csv(data, file)
+    }
+  )
+  
+  output$download_feedback <- downloadHandler(
+    filename = function() {
+      paste("feedback-", Sys.Date(), ".csv", sep = "")
+    },
+    content = function(file) {
+      write.csv(feedback, file)
     }
   )
   

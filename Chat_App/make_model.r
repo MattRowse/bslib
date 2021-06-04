@@ -20,6 +20,7 @@ library(e1071)
 #sheet <- "https://docs.google.com/spreadsheets/d/1lq3tOwDrxD9ZEuKc_oYCI-2lb9octmcgbN2P274D6wk/edit#gid=0"
 #data = gsheet2tbl("https://docs.google.com/spreadsheets/d/1lq3tOwDrxD9ZEuKc_oYCI-2lb9octmcgbN2P274D6wk/edit#gid=0")
 #saveRDS(data, file = "data.RDS")
+feedback = readRDS(file = "feedback.RDS")
 data = readRDS(file = "data.RDS")
 stripWhitespace(data$Area)
 logs = readRDS(file = "logs.RDS")
