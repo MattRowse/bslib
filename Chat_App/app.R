@@ -20,7 +20,7 @@ ui <- shinyUI(
   tabPanel(
     "Ask a question",
     fluidPage(tags$head(includeHTML(("google-analytics.html"))),
-              setBackgroundColor(color="AliceBlue"),
+              setBackgroundColor(color="ghostwhite"),
 #     theme = theme,
       div(style = "display:inline-block",
         selectInput(
@@ -54,6 +54,25 @@ ui <- shinyUI(
       verbatimTextOutput("chatbox",
                          placeholder = TRUE)
     ),
+# value checboxes for users to provide quality feedback
+      div(style = "display:inline-block",
+        actionBttn(
+          inputId = "helpful",
+          label = "Helpful!", 
+          style = "simple",
+          color = "success",
+          icon = icon("thumbs-up"),
+          size = "sm"
+        ),
+        actionBttn(
+          inputId = "not_helpful",
+          label = "Update this question!", 
+          style = "simple",
+          color = "danger",
+          icon = icon("thumbs-down"),
+          size = "sm"
+        )),
+
       br(),
       h5("Top 25 Trending Questions"),
       h6("*From last 30 days"),
@@ -142,6 +161,10 @@ ui <- shinyUI(
 ))
 
 server <- shinyServer(function(input, output, session) {
+  
+  # create value to write feedback against
+  feedback_row <- reactiveVal(nrow(logs))
+  
   observeEvent(input$send, {   
     output$chatbox <- renderText({
       if (input$category_field == "amazon") {
@@ -231,7 +254,11 @@ server <- shinyServer(function(input, output, session) {
       paste(out)
     })
   })
- 
+  
+#  observeEvent(input$helpful, { 
+#    logs$feedback[feedback_row] <- TRUE
+#  })
+  
   observeEvent(input$category_field, {
     output$teams_channel <- renderText({
       if (input$category_field == "amazon") {
@@ -312,9 +339,7 @@ server <- shinyServer(function(input, output, session) {
       out
     })
   })
-  
 
-  
   observeEvent(input$category_field, {
     output$trending <- 
       renderDataTable(logs %>% 
