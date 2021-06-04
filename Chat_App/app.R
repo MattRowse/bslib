@@ -1,13 +1,13 @@
 ## app.R ##
 setwd(getwd())
 library(shiny)
+library(shinyWidgets)
 library(shinydashboard)
 library(ggplot2)
 library(tidyr)
 #library(bslib)
 #library(thematic)
 source("make_model.r")
-
 ## create a base theme for bslib
 #theme <- bs_theme(bootswatch = "minty")
 
@@ -20,15 +20,19 @@ ui <- shinyUI(
   tabPanel(
     "Ask a question",
     fluidPage(tags$head(includeHTML(("google-analytics.html"))),
+              setBackgroundColor(color="AliceBlue"),
 #     theme = theme,
-      div(
+      div(style = "display:inline-block",
         selectInput(
           "category_field",
           "Category",
           choices = unique(sort(data$Area)),
-          selected = "Make a selection",
+          selected = "amazon",
           width = "300px"
-        )
+        ),
+        h5(HTML(paste0("<b>","Teams Channel","</b>"))),
+# add channel, confluence & teams links, based on category inside the div 
+        verbatimTextOutput("teams_channel",placeholder = TRUE)
       ),
       uiOutput("chatbox_q"),
       div(
@@ -37,7 +41,7 @@ ui <- shinyUI(
           "question_field",
           "Your question",
           width = "800px",
-          height = "100px"
+          height = "50px"
         )
       ),
       br(),
@@ -73,7 +77,7 @@ ui <- shinyUI(
         "db_question_field",
         "Add a question to database",
         width = "800px",
-        height = "100px"
+        height = "50px"
       )
     ),
     br(),
@@ -83,7 +87,7 @@ ui <- shinyUI(
         "Q_answer_field",
         "What is the answer to this question?",
         width = "800px",
-        height = "100px"
+        height = "50px"
       )
     ),
     br(),
@@ -125,7 +129,7 @@ ui <- shinyUI(
       actionButton(
         "train_models",
         "Retrain Question Models",
-        icon("paper-plane"),
+        icon("robot"),
         style = "color: #fff; background-color: #f50000; border-color: #940000"
       )),
       
@@ -136,7 +140,6 @@ ui <- shinyUI(
     )
   )
 ))
-
 
 server <- shinyServer(function(input, output, session) {
   observeEvent(input$send, {   
@@ -198,6 +201,9 @@ server <- shinyServer(function(input, output, session) {
       if (input$category_field == "permissions") {
         out <- permissionspred(toString(input$question_field))
       }
+      if (input$category_field == "pick_n_pack") {
+        out <- pick_n_packpred(toString(input$question_field))
+      }
       if (input$category_field == "pos") {
         out <- pospred(toString(input$question_field))
       }
@@ -221,21 +227,105 @@ server <- shinyServer(function(input, output, session) {
           timestamp = Sys.time()
         )
       saveRDS(logs, file = "logs.RDS")
-      logs = readRDS("logs.RDS")
+      logs <- readRDS("logs.RDS")
+      paste(out)
+    })
+  })
+ 
+  observeEvent(input$category_field, {
+    output$teams_channel <- renderText({
+      if (input$category_field == "amazon") {
+        out <- toString("Sales Channels")
+      }
+      if (input$category_field == "catch") {
+        out <- toString("Sales Channels")
+      }
+      if (input$category_field == "customers") {
+        out <- toString("General")
+      }
+      if (input$category_field == "data") {
+        out <- toString("Import/Export")
+      }
+      if (input$category_field == "design") {
+        out <- toString("Partners Team: Developer Support")
+      }
+      if (input$category_field == "dns") {
+        out <- toString("MAD")
+      }
+      if (input$category_field == "ebay") {
+        out <- toString("Sales Channels")
+      }
+      if (input$category_field == "emails") {
+        out <- toString("MAD")
+      }
+      if (input$category_field == "facebook") {
+        out <- toString("Import/Export")
+      }
+      if (input$category_field == "instagram") {
+        out <- toString("General")
+      }
+      if (input$category_field == "google") {
+        out <- toString("General")
+      }
+      if (input$category_field == "integrations") {
+        out <- toString("PII")
+      }
+      if (input$category_field == "inventory") {
+        out <- toString("PII")
+      }
+      if (input$category_field == "kogan") {
+        out <- toString("Sales Channels")
+      }
+      if (input$category_field == "myob") {
+        out <- toString("PII")
+      }
+      if (input$category_field == "mydeal") {
+        out <- toString("Sales Channels")
+      }
+      if (input$category_field == "neto_analytics") {
+        out <- toString("MAD")
+      }
+      if (input$category_field == "payments") {
+        out <- toString("PII")
+      }
+      if (input$category_field == "permissions") {
+        out <- toString("General")
+      }
+      if (input$category_field == "pick_n_pack") {
+        out <- toString("Shipping")
+      }
+      if (input$category_field == "pos") {
+        out <- toString("Sales Channels")
+      }
+      if (input$category_field == "shipping") {
+        out <- toString("Shipping")
+      }
+      if (input$category_field == "trademe") {
+        out <- toString("Import/Export")
+      }
+      if (input$category_field == "webstore") {
+        out <- toString("Webstore")
+      }
+      if (input$category_field == "xero") {
+        out <- toString("PII")
+      }
       out
     })
   })
   
 
+  
   observeEvent(input$category_field, {
     output$trending <- 
-      renderDataTable(logs %>% filter(area==input$category_field &
+      renderDataTable(logs %>% 
+                        filter(area==input$category_field &
                                       question != "NULL" & question != "" &
                                       timestamp >= Sys.Date()-30 & timestamp <= Sys.Date()) %>%
                                       select(question, answer) %>% 
                                       count(question, answer, sort = TRUE) %>%
                                       top_n(25) %>% 
-                                      select(question, answer))
+                                      select(question, answer)
+                                      )
                                       
                     
   })
@@ -244,17 +334,19 @@ server <- shinyServer(function(input, output, session) {
     output$confirm_chatbox <- renderText({
       "Thank you for contributing!"
     })
-    observeEvent(input$question_update, {
+  })
+  
+  observeEvent(input$question_update, {
       data <- data %>%
         add_row(
           Area = as.character(input$update_category_field),
           Question = as.character(input$db_question_field),
           Answers = paste("Predicted question: ",Question,"\n",  "Predicted answer: ",as.character(input$Q_answer_field),sep="\n"),
-          Timestamp = ymd_hms(Sys.time())
-        )
-      saveRDS(data, file = "data.RDS")
+          Timestamp = ymd_hms(Sys.time()))
+          saveRDS(data, file = "data.RDS")
     })
-    observeEvent(input$question_update, {
+    
+  observeEvent(input$question_update, {
       logs <- logs %>%
         add_row(
           area = as.character(input$update_category_field),
@@ -266,8 +358,7 @@ server <- shinyServer(function(input, output, session) {
       saveRDS(logs, file = "logs.RDS")
       logs = readRDS("logs.RDS")
     })
-    
-  })
+  
   observeEvent(input$time_selection, {
     output$myplot <- renderPlot(
       logs %>%
@@ -285,6 +376,7 @@ server <- shinyServer(function(input, output, session) {
         coord_flip()
     )
   })
+  
   observeEvent(input$time_selection, {
     output$myusage <- renderPlot(
       logs %>%
@@ -303,6 +395,7 @@ server <- shinyServer(function(input, output, session) {
         coord_flip()
     )
   })
+  
   observeEvent(input$time_selection, {
     output$line_chart <- renderPlot(
       logs %>%
@@ -335,7 +428,6 @@ server <- shinyServer(function(input, output, session) {
     )
   })
   
-  
   observeEvent(input$time_selection, {
     output$question_table <-
       renderDataTable(logs %>% 
@@ -366,4 +458,5 @@ server <- shinyServer(function(input, output, session) {
     train
   })
 })
+  
 shinyApp(ui, server)

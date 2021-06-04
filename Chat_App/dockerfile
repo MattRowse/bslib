@@ -58,6 +58,7 @@ RUN R -e "install.packages('bslib')"
 RUN R -e "install.packages('thematic')"
 RUN R -e "install.packages('ggplot2')"
 RUN R -e "install.packages('tidyr')"
+RUN R -e "install.packages('shinyWidgets')"
         
 ADD ./nginx.conf /etc/nginx/nginx.conf
 
