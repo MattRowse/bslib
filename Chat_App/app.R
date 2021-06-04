@@ -19,7 +19,7 @@ ui <- shinyUI(
   "Support Chatbot",
   tabPanel(
     "Ask a question",
-    fluidPage(
+    fluidPage(tags$head(includeHTML(("google-analytics.html"))),
 #     theme = theme,
       div(
         selectInput(
@@ -226,6 +226,7 @@ server <- shinyServer(function(input, output, session) {
     })
   })
   
+
   observeEvent(input$category_field, {
     output$trending <- 
       renderDataTable(logs %>% filter(area==input$category_field &
