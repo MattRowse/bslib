@@ -5,7 +5,14 @@ library(shinyWidgets)
 library(shinydashboard)
 library(ggplot2)
 library(tidyr)
+#library(bslib)
+#ibrary(thematic)
 source("make_model.r")
+## create a base theme for bslib
+#theme <- bs_theme(bootswatch = "minty")
+
+# Let thematic know to use the font from bs_lib
+#thematic_shiny(font = "auto")
 
 ui <- shinyUI(
   navbarPage(
@@ -13,8 +20,8 @@ ui <- shinyUI(
   tabPanel(
     "Ask a question",
     fluidPage(tags$head(includeHTML(("google-analytics.html"))),
-#             (tags$head(includeHTML(("google-optimize.html")))),
              setBackgroundColor(color="ghostwhite"),
+#    theme = theme,
       div(style = "display:inline-block",
         selectInput(
           "category_field",
@@ -42,25 +49,26 @@ ui <- shinyUI(
           actionButton("send", "Find your answer",
                        icon("paper-plane"),
                        style = "color: #fff; background-color: #337ab7; border-color: #2e6da4"
-                       ),
+                       )),
+      br(),
+      verbatimTextOutput("chatbox",
+                         placeholder = TRUE)
+    ),
+# value checboxes for users to provide quality feedback
+      div(style = "display:inline-block",
           actionButton(
             "helpful",
             "That was awesome!",
             icon("thumbs-up"),
             style = "color: #fff; background-color: #2e8b57; border-color: #355e3b"
           ),
-          actionButton(
-            "not_helpful",
-            "Update this question!",
-            icon("thumbs-down"),
-            style = "color: #fff; background-color: #f50000; border-color: #940000"
-          )
-          ),
-      br(),
-      h5(HTML("<b>","Predicted answer","</b>")),
-      verbatimTextOutput("chatbox",
-                         placeholder = TRUE)
-    ),
+        actionButton(
+          "not_helpful",
+          "Update this question!",
+          icon("thumbs-down"),
+          style = "color: #fff; background-color: #f50000; border-color: #940000"
+        )),
+
       br(),
       h5("Top 25 Trending Questions"),
       h6("*From last 30 days"),
@@ -104,7 +112,6 @@ ui <- shinyUI(
                      icon("paper-plane"),
                      style = "color: #fff; background-color: #337ab7; border-color: #2e6da4")),
     br(),
-    h5(HTML("<b>","Messages","</b>")),
     verbatimTextOutput("confirm_chatbox",
                        placeholder = TRUE)
   ),
@@ -113,8 +120,8 @@ ui <- shinyUI(
     dateRangeInput(
       "time_selection",
       "Time Period",
-      start = Sys.Date(),
-      end = Sys.Date(),
+      start = "2021-06-01",
+      end = "2021-06-01",
       min = NULL,
       max = NULL,
       format = "yyyy-mm-dd",
