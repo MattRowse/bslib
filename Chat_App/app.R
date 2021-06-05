@@ -16,7 +16,7 @@ source("make_model.r")
 
 ui <- shinyUI(
   navbarPage(
-  "Support Chatbot",
+  HTML("<b>","Helpy","</b>"),
   tabPanel(
     "Ask a question",
     fluidPage(tags$head(includeHTML(("google-analytics.html"))),
@@ -469,7 +469,7 @@ server <- shinyServer(function(input, output, session) {
     output$question_table <-
       renderDataTable(logs %>% 
                         filter(question != "NULL" & question != "") %>% 
-                          select(question, answer, timestamp) %>% drop_na())
+                          select(area, question, answer, timestamp) %>% drop_na())
   })
   
   output$download_log_Data <- downloadHandler(
